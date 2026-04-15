@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: backstage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-backstage}
+      POSTGRES_DB: backstage_librechat
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backstage"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backstage:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "7007:7007"
+    environment:
+      LIBRECHAT_API_KEY: ${LIBRECHAT_API_KEY}
+      LIBRECHAT_BASE_URL: ${LIBRECHAT_BASE_URL:-http://localhost:3080}
+      LIBRECHAT_AGENT_ID: ${LIBRECHAT_AGENT_ID:-default}
+      DB_CLIENT: pg
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: backstage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-backstage}
+      POSTGRES_DB: backstage_librechat
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

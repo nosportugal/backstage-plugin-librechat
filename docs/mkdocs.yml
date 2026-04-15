@@ -1,0 +1,14 @@
+site_name: Backstage LibreChat Plugin
+site_description: Documentation for the Backstage LibreChat Chat Bubble Plugin
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: light blue
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - Admin Guide: admin-guide.md
+  - Architecture: architecture.md
+  - Development: development.md

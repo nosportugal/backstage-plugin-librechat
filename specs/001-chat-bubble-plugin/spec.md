@@ -5,7 +5,7 @@
 **Status**: Draft  
 **Input**: User description: "Build a backstage plugin that adds a chat bubble component that integrates with Librechat Agent API for real-time AI conversations within Backstage."
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Ask the AI Agent a Question (Priority: P1)
 
@@ -82,7 +82,7 @@ When the AI agent generates a response, the user sees the text appear incrementa
 - What happens when the plugin configuration is missing or invalid? The chat bubble is hidden and an informative error is logged for administrators.
 - What happens when the user's session expires? The chat bubble gracefully handles authentication errors and prompts the user to reload.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -108,7 +108,7 @@ When the AI agent generates a response, the user sees the text appear incrementa
 - **Agent Configuration**: The admin-defined settings for the AI agent connection. Key attributes: agent identifier, endpoint configuration, greeting message, bubble position, access control rules.
 - **Chat Bubble Settings**: User-facing appearance and behaviour settings. Key attributes: position on screen, theme variant, visibility rules.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

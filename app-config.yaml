@@ -1,0 +1,13 @@
+app:
+  title: LibreChat Plugin Dev
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+
+librechat:
+  baseUrl: ${LIBRECHAT_BASE_URL}
+  apiKey: ${LIBRECHAT_API_KEY}
+  agentId: ${LIBRECHAT_AGENT_ID}
