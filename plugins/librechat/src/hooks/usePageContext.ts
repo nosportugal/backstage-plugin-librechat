@@ -35,7 +35,11 @@ export function usePageContext(): PageContext {
     let titleObserver: MutationObserver | undefined;
     if (titleEl) {
       titleObserver = new MutationObserver(update);
-      titleObserver.observe(titleEl, {childList: true, characterData: true, subtree: true});
+      titleObserver.observe(titleEl, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
     }
 
     // Patch pushState/replaceState to detect SPA navigation
