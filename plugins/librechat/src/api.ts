@@ -62,9 +62,7 @@ export class DefaultLibreChatApi implements LibreChatApi {
   }
 
   private get backendBaseUrl(): string {
-    return this.configApi
-      .getString("backend.baseUrl")
-      .replace(/\/+$/, "");
+    return this.configApi.getString("backend.baseUrl").replace(/\/+$/, "");
   }
 
   async checkApiKey(apiKey: string): Promise<string> {
@@ -82,7 +80,8 @@ export class DefaultLibreChatApi implements LibreChatApi {
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       throw new Error(
-        (data as {error?: string}).error ?? `Backend returned ${response.status}`,
+        (data as {error?: string}).error ??
+          `Backend returned ${response.status}`,
       );
     }
 
@@ -100,9 +99,7 @@ export class DefaultLibreChatApi implements LibreChatApi {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(options?.apiKey
-            ? {"x-librechat-api-key": options.apiKey}
-            : {}),
+          ...(options?.apiKey ? {"x-librechat-api-key": options.apiKey} : {}),
         },
         body: JSON.stringify({messages}),
       },
