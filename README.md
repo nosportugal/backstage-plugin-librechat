@@ -12,6 +12,14 @@ Ask questions about the page you're viewing, get contextual answers, and chat wi
 
 </div>
 
+<br/>
+
+<div align="center">
+
+![Backstage LibreChat Plugin](images/example.png)
+
+</div>
+
 ---
 
 ## ✨ Features
@@ -93,16 +101,19 @@ librechat:
   baseUrl: https://your-librechat-instance.com
   # Required: Agent ID for chat completions
   agentId: agent_abc123
+  # Optional: Display name for the chat agent (default: "AI")
+  name: NOS-GPT
   # Optional: Default API key (users can override in Settings)
   apiKey: your-librechat-api-key
 ```
 
-| Setting   | Required | Description                                      |
-| --------- | -------- | ------------------------------------------------ |
-| `baseUrl` | ✅       | URL of your LibreChat instance                   |
-| `agentId` | ✅       | Agent ID configured in LibreChat                 |
-| `apiKey`  | ❌       | Default API key (users can override)             |
-| `enabled` | ❌       | Enable/disable the chat bubble (default: `true`) |
+| Setting   | Required | Description                                                      |
+| --------- | -------- | ---------------------------------------------------------------- |
+| `baseUrl` | ✅       | URL of your LibreChat instance                                   |
+| `agentId` | ✅       | Agent ID configured in LibreChat                                 |
+| `name`    | ❌       | Display name shown in chat header and messages (default: `"AI"`) |
+| `apiKey`  | ❌       | Default API key (users can override)                             |
+| `enabled` | ❌       | Enable/disable the chat bubble (default: `true`)                 |
 
 ### 4 · Use it
 
