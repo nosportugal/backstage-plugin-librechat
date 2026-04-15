@@ -61,7 +61,7 @@ export function createRouter(options: RouterOptions): express.Router {
   router.post("/chat", async (req, res) => {
     const baseUrl = config.getString("librechat.baseUrl");
     const defaultApiKey = config.getOptionalString("librechat.apiKey");
-    const defaultAgentId = config.getOptionalString("librechat.agentId");
+    const agentId = config.getString("librechat.agentId");
 
     // Resolve API key: header override > config default
     const apiKey =
@@ -74,19 +74,8 @@ export function createRouter(options: RouterOptions): express.Router {
       return;
     }
 
-    // Resolve agent ID: header override > config default
-    const agentId =
-      (req.headers["x-librechat-agent-id"] as string) || defaultAgentId;
-    if (!agentId) {
-      res.status(400).json({
-        error:
-          "No agent ID configured. Set librechat.agentId in app-config.yaml or provide one in Settings.",
-      });
-      return;
-    }
-
     if (!sanitizeAgentId(agentId)) {
-      res.status(400).json({error: "Invalid agent ID format."});
+      res.status(400).json({error: "Invalid agent ID format in configuration."});
       return;
     }
 
@@ -164,12 +153,16 @@ export function createRouter(options: RouterOptions): express.Router {
   /**
    * GET /agents
    *
-   * Lists available agents from LibreChat's models endpoint.
+   * POST /check
+   *
+   * Validates that the provided API key works by sending a short test
+   * message to LibreChat. Returns the assistant reply as plain text.
    * Headers (optional overrides):
    *   x-librechat-api-key — Override the default API key
    */
-  router.get("/agents", async (req, res) => {
+  router.post("/check", async (req, res) => {
     const baseUrl = config.getString("librechat.baseUrl");
+    const agentId = config.getString("librechat.agentId");
     const defaultApiKey = config.getOptionalString("librechat.apiKey");
 
     const apiKey =
@@ -181,32 +174,47 @@ export function createRouter(options: RouterOptions): express.Router {
       return;
     }
 
-    const targetUrl = `${baseUrl.replace(/\/+$/, "")}/api/agents/v1/models`;
-    logger.debug(`Fetching agents from ${targetUrl}`);
+    const targetUrl = `${baseUrl.replace(/\/+$/, "")}/api/agents/v1/chat/completions`;
+    logger.debug(`Checking API key via ${targetUrl}`);
 
     try {
       const upstream = await fetch(targetUrl, {
-        method: "GET",
+        method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          model: agentId,
+          messages: [
+            {role: "user", content: "Say hello in one short sentence."},
+          ],
+          stream: false,
+        }),
       });
 
       if (!upstream.ok) {
         const errorText = await upstream.text();
-        logger.error(`LibreChat agents error ${upstream.status}: ${errorText}`);
-        res.status(upstream.status).json({
-          error: `LibreChat returned ${upstream.status}`,
-          details: errorText,
-        });
+        logger.error(`LibreChat check error ${upstream.status}: ${errorText}`);
+        if (upstream.status === 401 || upstream.status === 403) {
+          res.status(401).json({error: "Invalid API key"});
+        } else {
+          res.status(upstream.status).json({
+            error: `LibreChat returned ${upstream.status}`,
+            details: errorText,
+          });
+        }
         return;
       }
 
-      const data = await upstream.json();
-      res.json(data);
+      const data = (await upstream.json()) as {
+        choices?: Array<{message?: {content?: string}}>;
+      };
+      const reply = data?.choices?.[0]?.message?.content ?? "";
+      res.json({ok: true, reply});
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
-      logger.error(`Failed to fetch agents: ${message}`);
+      logger.error(`Failed to check API key: ${message}`);
       res
         .status(502)
         .json({error: "Failed to connect to LibreChat", details: message});

@@ -26,10 +26,9 @@ export interface Config {
     apiKey?: string;
 
     /**
-     * Default agent ID to use for chat completions.
-     * Users can override this in the Backstage UI settings.
+     * Agent ID to use for chat completions.
      * @visibility backend
      */
-    agentId?: string;
+    agentId: string;
   };
 }

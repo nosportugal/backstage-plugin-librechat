@@ -8,6 +8,7 @@
   "scripts": {
     "start": "yarn workspace @nosportugal/backstage-plugin-librechat start",
     "start:backend": "yarn workspace @nosportugal/backstage-plugin-librechat-backend start",
+    "start:dev": "yarn start:backend & yarn start",
     "build": "yarn workspaces foreach -A run build",
     "tsc": "yarn workspaces foreach -A run tsc",
     "lint": "yarn workspaces foreach -A run lint",

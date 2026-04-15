@@ -10,12 +10,6 @@ export interface ChatMessage {
   content: string;
 }
 
-/** An available LibreChat agent (model). */
-export interface Agent {
-  id: string;
-  name: string;
-}
-
 /**
  * API for communicating with LibreChat through the backend proxy.
  *
@@ -26,21 +20,21 @@ export interface LibreChatApi {
    * Sends messages to LibreChat and yields streamed content chunks.
    *
    * @param messages - Conversation history
-   * @param options - Optional overrides for agentId / apiKey
+   * @param options - Optional override for apiKey
    * @returns An async generator yielding content strings as they arrive
    */
   sendMessage(
     messages: ChatMessage[],
-    options?: {agentId?: string; apiKey?: string},
+    options?: {apiKey?: string},
   ): AsyncGenerator<string, void, unknown>;
 
   /**
-   * Lists available agents using the provided API key.
+   * Checks that the given API key is valid by sending a short test message.
    *
-   * @param apiKey - API key to authenticate with
-   * @returns Array of available agents
+   * @param apiKey - API key to validate
+   * @returns The assistant's reply
    */
-  listAgents(apiKey: string): Promise<Agent[]>;
+  checkApiKey(apiKey: string): Promise<string>;
 }
 
 /**
@@ -67,61 +61,52 @@ export class DefaultLibreChatApi implements LibreChatApi {
     this.configApi = options.configApi;
   }
 
-  async listAgents(apiKey: string): Promise<Agent[]> {
-    const baseUrl = this.configApi
-      .getString("librechat.baseUrl")
+  private get backendBaseUrl(): string {
+    return this.configApi
+      .getString("backend.baseUrl")
       .replace(/\/+$/, "");
-    const targetUrl = `${baseUrl}/api/agents/v1/models`;
+  }
 
-    const response = await fetch(targetUrl, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
+  async checkApiKey(apiKey: string): Promise<string> {
+    const response = await this.fetchApi.fetch(
+      `${this.backendBaseUrl}/api/librechat/check`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey ? {"x-librechat-api-key": apiKey} : {}),
+        },
       },
-    });
+    );
 
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        throw new Error("Invalid API key");
-      }
-      throw new Error(`LibreChat returned ${response.status}`);
+      const data = await response.json().catch(() => ({}));
+      throw new Error(
+        (data as {error?: string}).error ?? `Backend returned ${response.status}`,
+      );
     }
 
-    const data = await response.json();
-    // LibreChat returns OpenAI-compatible models list: { data: [{ id, name?, ... }] }
-    const models =
-      (data as {data?: Array<{id: string; name?: string}>}).data ?? [];
-    return models.map((m) => ({id: m.id, name: m.name ?? m.id}));
+    const data = (await response.json()) as {ok: boolean; reply: string};
+    return data.reply;
   }
 
   async *sendMessage(
     messages: ChatMessage[],
-    options?: {agentId?: string; apiKey?: string},
+    options?: {apiKey?: string},
   ): AsyncGenerator<string, void, unknown> {
-    const baseUrl = this.configApi
-      .getString("librechat.baseUrl")
-      .replace(/\/+$/, "");
-    const targetUrl = `${baseUrl}/api/agents/v1/chat/completions`;
-
-    if (!options?.apiKey) {
-      throw new Error("No API key configured. Set one in Settings.");
-    }
-    if (!options?.agentId) {
-      throw new Error("No agent selected. Pick one in Settings.");
-    }
-
-    const response = await fetch(targetUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${options.apiKey}`,
+    const response = await this.fetchApi.fetch(
+      `${this.backendBaseUrl}/api/librechat/chat`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(options?.apiKey
+            ? {"x-librechat-api-key": options.apiKey}
+            : {}),
+        },
+        body: JSON.stringify({messages}),
       },
-      body: JSON.stringify({
-        model: options.agentId,
-        messages,
-        stream: true,
-      }),
-    });
+    );
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
@@ -146,9 +131,7 @@ export class DefaultLibreChatApi implements LibreChatApi {
 
         buffer += decoder.decode(value, {stream: true});
 
-        // Process complete SSE lines from the buffer
         const lines = buffer.split("\n");
-        // Keep the last potentially incomplete line in the buffer
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {

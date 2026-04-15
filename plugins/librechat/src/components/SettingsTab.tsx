@@ -5,13 +5,10 @@ import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import CircularProgress from "@material-ui/core/CircularProgress";
-import MenuItem from "@material-ui/core/MenuItem";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
-import ErrorIcon from "@material-ui/icons/Error";
 import CheckIcon from "@material-ui/icons/Check";
 import {useApi} from "@backstage/frontend-plugin-api";
-import {libreChatApiRef, Agent} from "../api";
+import {libreChatApiRef} from "../api";
 import {useLibreChatSettings} from "../hooks/useLibreChatSettings";
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -60,20 +57,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     height: 40,
     padding: 0,
   },
-  statusRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(0.5),
-    fontSize: "0.85rem",
-  },
-  successText: {
-    color: theme.palette.success?.main ?? "#4caf50",
-    fontSize: "0.85rem",
-  },
-  errorText: {
-    color: theme.palette.error.main,
-    fontSize: "0.85rem",
-  },
   actions: {
     display: "flex",
     gap: theme.spacing(1),
@@ -88,61 +71,39 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 interface SettingsTabProps {
   onBack: () => void;
+  onCheckResult?: (reply: string, error?: string) => void;
 }
 
-export function SettingsTab({onBack}: SettingsTabProps) {
+export function SettingsTab({onBack, onCheckResult}: SettingsTabProps) {
   const classes = useStyles();
   const libreChatApi = useApi(libreChatApiRef);
   const {settings, saveSettings, clearSettings} = useLibreChatSettings();
 
   const [apiKey, setApiKey] = useState(settings.apiKey);
-  const [agentId, setAgentId] = useState(settings.agentId);
-  const [agentName, setAgentName] = useState(settings.agentName);
   const [saved, setSaved] = useState(false);
-
-  // Agent listing state
-  const [agents, setAgents] = useState<Agent[]>([]);
   const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState<"idle" | "success" | "error">(
-    "idle",
-  );
-  const [testError, setTestError] = useState("");
 
   useEffect(() => {
     setApiKey(settings.apiKey);
-    setAgentId(settings.agentId);
-    setAgentName(settings.agentName);
   }, [settings]);
 
   const handleTest = async () => {
     if (!apiKey.trim()) return;
 
     setTesting(true);
-    setTestStatus("idle");
-    setTestError("");
-    setAgents([]);
-
     try {
-      const result = await libreChatApi.listAgents(apiKey.trim());
-      setAgents(result);
-      setTestStatus("success");
-
-      // If we have agents and no agent is selected, pick the first one
-      if (result.length > 0 && !agentId) {
-        setAgentId(result[0].id);
-        setAgentName(result[0].name);
-      }
+      const reply = await libreChatApi.checkApiKey(apiKey.trim());
+      onCheckResult?.(reply);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Connection failed";
-      setTestStatus("error");
-      setTestError(message);
+      onCheckResult?.("", message);
     } finally {
       setTesting(false);
     }
   };
 
   const handleSave = async () => {
-    await saveSettings({apiKey, agentId, agentName});
+    await saveSettings({apiKey});
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -150,10 +111,6 @@ export function SettingsTab({onBack}: SettingsTabProps) {
   const handleClear = async () => {
     await clearSettings();
     setApiKey("");
-    setAgentId("");
-    setAgentName("");
-    setAgents([]);
-    setTestStatus("idle");
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -169,8 +126,8 @@ export function SettingsTab({onBack}: SettingsTabProps) {
 
       <div className={classes.content}>
         <Typography className={classes.description}>
-          Override the default LibreChat configuration. Leave blank to use the
-          defaults set by your Backstage administrator.
+          Enter your LibreChat API key. Leave blank to use the default key set
+          by your Backstage administrator.
         </Typography>
 
         <div className={classes.apiKeyRow}>
@@ -181,14 +138,7 @@ export function SettingsTab({onBack}: SettingsTabProps) {
             size="small"
             type="password"
             value={apiKey}
-            onChange={(e) => {
-              setApiKey(e.target.value);
-              // Reset test state when key changes
-              if (testStatus !== "idle") {
-                setTestStatus("idle");
-                setAgents([]);
-              }
-            }}
+            onChange={(e) => setApiKey(e.target.value)}
             placeholder="Your LibreChat API key"
             helperText="Overrides the server-configured API key"
           />
@@ -199,62 +149,11 @@ export function SettingsTab({onBack}: SettingsTabProps) {
             size="small"
             disabled={!apiKey.trim() || testing}
             onClick={handleTest}
+            title="Check API key — sends a test message"
           >
             {testing ? <CircularProgress size={20} /> : <CheckIcon />}
           </Button>
         </div>
-
-        {testStatus === "success" && (
-          <div className={classes.statusRow}>
-            <CheckCircleIcon style={{fontSize: 16, color: "#4caf50"}} />
-            <Typography className={classes.successText}>
-              Connected — {agents.length} agent{agents.length !== 1 ? "s" : ""}{" "}
-              found
-            </Typography>
-          </div>
-        )}
-
-        {testStatus === "error" && (
-          <div className={classes.statusRow}>
-            <ErrorIcon style={{fontSize: 16}} color="error" />
-            <Typography className={classes.errorText}>{testError}</Typography>
-          </div>
-        )}
-
-        {agents.length > 0 ? (
-          <TextField
-            label="Agent"
-            variant="outlined"
-            size="small"
-            select
-            fullWidth
-            value={agentId}
-            onChange={(e) => {
-              const id = e.target.value;
-              setAgentId(id);
-              const match = agents.find((a) => a.id === id);
-              setAgentName(match?.name ?? id);
-            }}
-            helperText="Select the agent to use for conversations"
-          >
-            {agents.map((agent) => (
-              <MenuItem key={agent.id} value={agent.id}>
-                {agent.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          <TextField
-            label="Agent ID"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-            placeholder="e.g. agent_abc123"
-            helperText="Enter your API key and click Test to load agents, or type an ID manually"
-          />
-        )}
 
         <div className={classes.actions}>
           <Button
