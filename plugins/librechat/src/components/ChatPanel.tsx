@@ -9,7 +9,7 @@ import SendIcon from "@material-ui/icons/Send";
 import SettingsIcon from "@material-ui/icons/Settings";
 import DeleteSweepIcon from "@material-ui/icons/DeleteSweep";
 import LinkIcon from "@material-ui/icons/Link";
-import {useApi} from "@backstage/frontend-plugin-api";
+import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {libreChatApiRef, ChatMessage as ChatMessageType} from "../api";
 import {ChatMessage} from "./ChatMessage";
 import {SettingsTab} from "./SettingsTab";
@@ -95,8 +95,10 @@ const useStyles = makeStyles((theme: Theme) => ({
 export function ChatPanel() {
   const classes = useStyles();
   const libreChatApi = useApi(libreChatApiRef);
+  const configApi = useApi(configApiRef);
   const {settings} = useLibreChatSettings();
   const pageContext = usePageContext();
+  const agentName = configApi.getOptionalString("librechat.name") ?? "AI";
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState("");
@@ -135,18 +137,20 @@ export function ChatPanel() {
     setMessages([...updatedMessages, assistantMessage]);
 
     try {
-      // Prepend page context so the agent knows what the user is viewing
-      const contextMessage: ChatMessageType = {
-        role: "system",
-        content: [
-          "The user is currently viewing a Backstage page with the following context:",
-          `- Page title: ${pageContext.title}`,
-          `- Page path: ${pageContext.path}`,
-          `- Full URL: ${pageContext.url}`,
-          "Use this context to provide relevant answers about what they are looking at.",
-        ].join("\n"),
-      };
-      const messagesWithContext = [contextMessage, ...updatedMessages];
+      // Inject page context into the latest user message
+      const contextSuffix = [
+        "",
+        "[Page context]",
+        `Title: ${pageContext.title}`,
+        `Path: ${pageContext.path}`,
+        `URL: ${pageContext.url}`,
+      ].join("\n");
+
+      const messagesWithContext = updatedMessages.map((msg, idx) =>
+        idx === updatedMessages.length - 1 && msg.role === "user"
+          ? {...msg, content: `${msg.content}\n${contextSuffix}`}
+          : msg,
+      );
 
       const stream = libreChatApi.sendMessage(messagesWithContext, {
         apiKey: settings.apiKey || undefined,
@@ -238,7 +242,7 @@ export function ChatPanel() {
   return (
     <div className={classes.root}>
       <div className={classes.header}>
-        <Typography className={classes.headerTitle}>AI Chat</Typography>
+        <Typography className={classes.headerTitle}>{agentName} Chat</Typography>
         <div className={classes.headerActions}>
           <IconButton size="small" onClick={handleClear} title="Clear chat">
             <DeleteSweepIcon fontSize="small" />
@@ -266,7 +270,7 @@ export function ChatPanel() {
             </Typography>
           </div>
         ) : (
-          messages.map((msg, idx) => <ChatMessage key={idx} message={msg} />)
+          messages.map((msg, idx) => <ChatMessage key={idx} message={msg} agentName={agentName} />)
         )}
         <div ref={messagesEndRef} />
       </div>
