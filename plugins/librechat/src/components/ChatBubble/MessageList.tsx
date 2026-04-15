@@ -111,9 +111,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               component="div"
               className={`${classes.markdown} ${message.role === 'user' ? classes.markdownUser : ''}`}
             >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.content}
-              </ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
             </Typography>
           </Box>
         </Box>
@@ -129,9 +127,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           >
             <Typography variant="body2" component="div" className={classes.markdown}>
               {streamingContent ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {streamingContent}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamingContent}</ReactMarkdown>
               ) : (
                 '...'
               )}

@@ -117,14 +117,12 @@ export async function createRouter(options: RouterOptions): Promise<Router> {
       }
 
       if (content.length > 10000) {
-        res
-          .status(400)
-          .json({
-            error: {
-              code: 'VALIDATION_ERROR',
-              message: 'Content exceeds maximum length of 10,000 characters',
-            },
-          });
+        res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Content exceeds maximum length of 10,000 characters',
+          },
+        });
         return;
       }
 
