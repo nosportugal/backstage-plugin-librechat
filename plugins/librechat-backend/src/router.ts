@@ -75,7 +75,9 @@ export function createRouter(options: RouterOptions): express.Router {
     }
 
     if (!sanitizeAgentId(agentId)) {
-      res.status(400).json({error: "Invalid agent ID format in configuration."});
+      res
+        .status(400)
+        .json({error: "Invalid agent ID format in configuration."});
       return;
     }
 

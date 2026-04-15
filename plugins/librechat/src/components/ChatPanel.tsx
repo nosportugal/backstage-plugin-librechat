@@ -175,7 +175,10 @@ export function ChatPanel() {
       if (checkError) {
         setMessages((prev) => [
           ...prev,
-          {role: "assistant", content: `⚠️ API key check failed: ${checkError}`},
+          {
+            role: "assistant",
+            content: `⚠️ API key check failed: ${checkError}`,
+          },
         ]);
       } else {
         setMessages((prev) => [
@@ -225,13 +228,7 @@ export function ChatPanel() {
             </Typography>
           </div>
         ) : (
-          messages.map((msg, idx) => (
-            <ChatMessage
-              key={idx}
-              message={msg}
-
-            />
-          ))
+          messages.map((msg, idx) => <ChatMessage key={idx} message={msg} />)
         )}
         <div ref={messagesEndRef} />
       </div>

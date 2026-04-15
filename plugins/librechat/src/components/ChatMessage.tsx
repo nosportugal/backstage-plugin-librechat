@@ -90,9 +90,7 @@ export function ChatMessage({message}: ChatMessageProps) {
         isUser ? classes.userRow : classes.assistantRow
       }`}
     >
-      <Typography className={classes.label}>
-        {isUser ? "You" : "AI"}
-      </Typography>
+      <Typography className={classes.label}>{isUser ? "You" : "AI"}</Typography>
       <div
         className={`${classes.bubble} ${
           isUser ? classes.userBubble : classes.assistantBubble
