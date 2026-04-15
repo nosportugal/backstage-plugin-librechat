@@ -242,7 +242,9 @@ export function ChatPanel() {
   return (
     <div className={classes.root}>
       <div className={classes.header}>
-        <Typography className={classes.headerTitle}>{agentName} Chat</Typography>
+        <Typography className={classes.headerTitle}>
+          {agentName} Chat
+        </Typography>
         <div className={classes.headerActions}>
           <IconButton size="small" onClick={handleClear} title="Clear chat">
             <DeleteSweepIcon fontSize="small" />
@@ -270,7 +272,9 @@ export function ChatPanel() {
             </Typography>
           </div>
         ) : (
-          messages.map((msg, idx) => <ChatMessage key={idx} message={msg} agentName={agentName} />)
+          messages.map((msg, idx) => (
+            <ChatMessage key={idx} message={msg} agentName={agentName} />
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
