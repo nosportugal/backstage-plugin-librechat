@@ -1,1 +1,0 @@
-export { DatabaseManager } from './DatabaseManager';
