@@ -22,4 +22,4 @@ librechat:
   # Optional: Default API key (users can override in Settings)
   # apiKey: your-librechat-api-key
   # Required: Agent ID for chat completions
-  agentId: agent_Kmhmva8A3Z71Qhw9P7kUe
+  agentId: agent_TsylcpEy-eyHZhrQIaOmA
