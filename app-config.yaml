@@ -1,0 +1,19 @@
+app:
+  title: LibreChat Plugin Dev
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+
+# LibreChat plugin configuration
+librechat:
+  # Enable the chat bubble without needing the feature flag
+  enabled: true
+  # Required: URL of your LibreChat instance
+  baseUrl: https://nos-gpt-staging.oizys.clg.nos.pt
+  # Optional: Default API key (users can override in Settings)
+  # apiKey: your-librechat-api-key
+  # Optional: Default agent ID (users can override in Settings)
+  # agentId: agent_abc123
