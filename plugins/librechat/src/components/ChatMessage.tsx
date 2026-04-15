@@ -78,10 +78,9 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  agentName?: string;
 }
 
-export function ChatMessage({message, agentName}: ChatMessageProps) {
+export function ChatMessage({message}: ChatMessageProps) {
   const classes = useStyles();
   const isUser = message.role === "user";
 
@@ -92,7 +91,7 @@ export function ChatMessage({message, agentName}: ChatMessageProps) {
       }`}
     >
       <Typography className={classes.label}>
-        {isUser ? "You" : agentName || "AI"}
+        {isUser ? "You" : "AI"}
       </Typography>
       <div
         className={`${classes.bubble} ${

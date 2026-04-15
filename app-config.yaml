@@ -6,6 +6,10 @@ backend:
   baseUrl: http://localhost:7007
   listen:
     port: 7007
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
 
 # LibreChat plugin configuration
 librechat:
@@ -15,5 +19,5 @@ librechat:
   baseUrl: https://nos-gpt-staging.oizys.clg.nos.pt
   # Optional: Default API key (users can override in Settings)
   # apiKey: your-librechat-api-key
-  # Optional: Default agent ID (users can override in Settings)
-  # agentId: agent_abc123
+  # Required: Agent ID for chat completions
+  agentId: agent_Kmhmva8A3Z71Qhw9P7kUe

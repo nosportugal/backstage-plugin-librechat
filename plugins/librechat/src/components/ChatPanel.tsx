@@ -116,7 +116,6 @@ export function ChatPanel() {
 
     try {
       const stream = libreChatApi.sendMessage(updatedMessages, {
-        agentId: settings.agentId || undefined,
         apiKey: settings.apiKey || undefined,
       });
 
@@ -171,10 +170,31 @@ export function ChatPanel() {
     abortRef.current = true;
   }, []);
 
+  const handleCheckResult = useCallback(
+    (reply: string, checkError?: string) => {
+      if (checkError) {
+        setMessages((prev) => [
+          ...prev,
+          {role: "assistant", content: `⚠️ API key check failed: ${checkError}`},
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {role: "assistant", content: `✅ API key is valid!\n\n${reply}`},
+        ]);
+      }
+      setShowSettings(false);
+    },
+    [],
+  );
+
   if (showSettings) {
     return (
       <div className={classes.root}>
-        <SettingsTab onBack={() => setShowSettings(false)} />
+        <SettingsTab
+          onBack={() => setShowSettings(false)}
+          onCheckResult={handleCheckResult}
+        />
       </div>
     );
   }
@@ -182,9 +202,7 @@ export function ChatPanel() {
   return (
     <div className={classes.root}>
       <div className={classes.header}>
-        <Typography className={classes.headerTitle}>
-          {settings.agentName || "AI Chat"}
-        </Typography>
+        <Typography className={classes.headerTitle}>AI Chat</Typography>
         <div className={classes.headerActions}>
           <IconButton size="small" onClick={handleClear} title="Clear chat">
             <DeleteSweepIcon fontSize="small" />
@@ -211,7 +229,7 @@ export function ChatPanel() {
             <ChatMessage
               key={idx}
               message={msg}
-              agentName={settings.agentName}
+
             />
           ))
         )}
