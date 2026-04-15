@@ -1,5 +1,5 @@
-import { createBackendPlugin, coreServices } from '@backstage/backend-plugin-api';
-import { createRouter } from './router';
+import {createBackendPlugin, coreServices} from "@backstage/backend-plugin-api";
+import {createRouter} from "./router";
 
 /**
  * The LibreChat backend plugin.
@@ -10,7 +10,7 @@ import { createRouter } from './router';
  * @public
  */
 export const libreChatPlugin = createBackendPlugin({
-  pluginId: 'librechat',
+  pluginId: "librechat",
   register(env) {
     env.registerInit({
       deps: {
@@ -18,15 +18,15 @@ export const libreChatPlugin = createBackendPlugin({
         config: coreServices.rootConfig,
         httpRouter: coreServices.httpRouter,
       },
-      async init({ logger, config, httpRouter }) {
-        const baseUrl = config.getString('librechat.baseUrl');
+      async init({logger, config, httpRouter}) {
+        const baseUrl = config.getString("librechat.baseUrl");
         logger.info(`LibreChat plugin initialized, proxying to ${baseUrl}`);
 
-        const router = createRouter({ logger, config });
+        const router = createRouter({logger, config});
         httpRouter.use(router);
         httpRouter.addAuthPolicy({
-          path: '/',
-          allow: 'unauthenticated',
+          path: "/",
+          allow: "unauthenticated",
         });
       },
     });

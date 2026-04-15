@@ -13,9 +13,9 @@ A Backstage plugin that adds a floating AI chat bubble to your developer portal,
 
 ## Packages
 
-| Package | Description |
-|---|---|
-| `@nosportugal/backstage-plugin-librechat` | Frontend plugin — chat bubble UI, settings, API client |
+| Package                                           | Description                                              |
+| ------------------------------------------------- | -------------------------------------------------------- |
+| `@nosportugal/backstage-plugin-librechat`         | Frontend plugin — chat bubble UI, settings, API client   |
 | `@nosportugal/backstage-plugin-librechat-backend` | Backend plugin — proxies streaming requests to LibreChat |
 
 ## Architecture
@@ -30,7 +30,7 @@ User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreC
 
 ```typescript
 // packages/backend/src/index.ts
-import libreChatBackend from '@nosportugal/backstage-plugin-librechat-backend';
+import libreChatBackend from "@nosportugal/backstage-plugin-librechat-backend";
 
 const backend = createBackend();
 backend.add(libreChatBackend);

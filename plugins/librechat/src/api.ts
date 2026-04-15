@@ -1,8 +1,12 @@
-import { createApiRef, FetchApi, ConfigApi } from '@backstage/frontend-plugin-api';
+import {
+  createApiRef,
+  FetchApi,
+  ConfigApi,
+} from "@backstage/frontend-plugin-api";
 
 /** A single chat message. */
 export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
@@ -27,7 +31,7 @@ export interface LibreChatApi {
    */
   sendMessage(
     messages: ChatMessage[],
-    options?: { agentId?: string; apiKey?: string },
+    options?: {agentId?: string; apiKey?: string},
   ): AsyncGenerator<string, void, unknown>;
 
   /**
@@ -45,7 +49,7 @@ export interface LibreChatApi {
  * @public
  */
 export const libreChatApiRef = createApiRef<LibreChatApi>({
-  id: 'plugin.librechat.api',
+  id: "plugin.librechat.api",
 });
 
 /**
@@ -58,17 +62,19 @@ export class DefaultLibreChatApi implements LibreChatApi {
   private readonly fetchApi: FetchApi;
   private readonly configApi: ConfigApi;
 
-  constructor(options: { fetchApi: FetchApi; configApi: ConfigApi }) {
+  constructor(options: {fetchApi: FetchApi; configApi: ConfigApi}) {
     this.fetchApi = options.fetchApi;
     this.configApi = options.configApi;
   }
 
   async listAgents(apiKey: string): Promise<Agent[]> {
-    const baseUrl = this.configApi.getString('librechat.baseUrl').replace(/\/+$/, '');
+    const baseUrl = this.configApi
+      .getString("librechat.baseUrl")
+      .replace(/\/+$/, "");
     const targetUrl = `${baseUrl}/api/agents/v1/models`;
 
     const response = await fetch(targetUrl, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
@@ -76,35 +82,38 @@ export class DefaultLibreChatApi implements LibreChatApi {
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        throw new Error('Invalid API key');
+        throw new Error("Invalid API key");
       }
       throw new Error(`LibreChat returned ${response.status}`);
     }
 
     const data = await response.json();
     // LibreChat returns OpenAI-compatible models list: { data: [{ id, name?, ... }] }
-    const models = (data as { data?: Array<{ id: string; name?: string }> }).data ?? [];
-    return models.map(m => ({ id: m.id, name: m.name ?? m.id }));
+    const models =
+      (data as {data?: Array<{id: string; name?: string}>}).data ?? [];
+    return models.map((m) => ({id: m.id, name: m.name ?? m.id}));
   }
 
   async *sendMessage(
     messages: ChatMessage[],
-    options?: { agentId?: string; apiKey?: string },
+    options?: {agentId?: string; apiKey?: string},
   ): AsyncGenerator<string, void, unknown> {
-    const baseUrl = this.configApi.getString('librechat.baseUrl').replace(/\/+$/, '');
+    const baseUrl = this.configApi
+      .getString("librechat.baseUrl")
+      .replace(/\/+$/, "");
     const targetUrl = `${baseUrl}/api/agents/v1/chat/completions`;
 
     if (!options?.apiKey) {
-      throw new Error('No API key configured. Set one in Settings.');
+      throw new Error("No API key configured. Set one in Settings.");
     }
     if (!options?.agentId) {
-      throw new Error('No agent selected. Pick one in Settings.');
+      throw new Error("No agent selected. Pick one in Settings.");
     }
 
     const response = await fetch(targetUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${options.apiKey}`,
       },
       body: JSON.stringify({
@@ -117,44 +126,44 @@ export class DefaultLibreChatApi implements LibreChatApi {
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
       throw new Error(
-        (errorBody as { error?: string }).error ??
+        (errorBody as {error?: string}).error ??
           `Backend returned ${response.status}`,
       );
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error('No response stream available');
+      throw new Error("No response stream available");
     }
 
     const decoder = new TextDecoder();
-    let buffer = '';
+    let buffer = "";
 
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        const {done, value} = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, {stream: true});
 
         // Process complete SSE lines from the buffer
-        const lines = buffer.split('\n');
+        const lines = buffer.split("\n");
         // Keep the last potentially incomplete line in the buffer
-        buffer = lines.pop() ?? '';
+        buffer = lines.pop() ?? "";
 
         for (const line of lines) {
           const trimmed = line.trim();
 
-          if (trimmed === 'data: [DONE]') {
+          if (trimmed === "data: [DONE]") {
             return;
           }
 
-          if (trimmed.startsWith('data: ')) {
+          if (trimmed.startsWith("data: ")) {
             const jsonStr = trimmed.slice(6);
             try {
               const parsed = JSON.parse(jsonStr);
               const content = parsed?.choices?.[0]?.delta?.content;
-              if (typeof content === 'string' && content.length > 0) {
+              if (typeof content === "string" && content.length > 0) {
                 yield content;
               }
             } catch {

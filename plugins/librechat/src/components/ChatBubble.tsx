@@ -1,23 +1,20 @@
-import React, { useState } from 'react';
-import { makeStyles, Theme } from '@material-ui/core/styles';
-import Fab from '@material-ui/core/Fab';
-import Paper from '@material-ui/core/Paper';
-import Slide from '@material-ui/core/Slide';
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import ChatIcon from '@material-ui/icons/Chat';
-import CloseIcon from '@material-ui/icons/Close';
-import {
-  useApi,
-  configApiRef,
-} from '@backstage/frontend-plugin-api';
-import { ChatPanel } from './ChatPanel';
+import React, {useState} from "react";
+import {makeStyles, Theme} from "@material-ui/core/styles";
+import Fab from "@material-ui/core/Fab";
+import Paper from "@material-ui/core/Paper";
+import Slide from "@material-ui/core/Slide";
+import ClickAwayListener from "@material-ui/core/ClickAwayListener";
+import ChatIcon from "@material-ui/icons/Chat";
+import CloseIcon from "@material-ui/icons/Close";
+import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
+import {ChatPanel} from "./ChatPanel";
 
 const CHAT_WIDTH = 400;
 const CHAT_HEIGHT = 560;
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
-    position: 'fixed',
+    position: "fixed",
     bottom: theme.spacing(3),
     right: theme.spacing(3),
     zIndex: theme.zIndex.tooltip + 1,
@@ -26,16 +23,16 @@ const useStyles = makeStyles((theme: Theme) => ({
     boxShadow: theme.shadows[6],
   },
   panel: {
-    position: 'fixed',
+    position: "fixed",
     bottom: theme.spacing(3) + 56 + 12, // fab height + gap
     right: theme.spacing(3),
     width: CHAT_WIDTH,
     height: CHAT_HEIGHT,
-    maxHeight: 'calc(100vh - 120px)',
+    maxHeight: "calc(100vh - 120px)",
     borderRadius: 12,
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
     zIndex: theme.zIndex.tooltip + 1,
     boxShadow: theme.shadows[16],
   },
@@ -43,7 +40,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 function useIsEnabled(): boolean {
   const configApi = useApi(configApiRef);
-  return configApi.getOptionalBoolean('librechat.enabled') ?? true;
+  return configApi.getOptionalBoolean("librechat.enabled") ?? true;
 }
 
 export function ChatBubble() {
@@ -68,8 +65,8 @@ export function ChatBubble() {
           <Fab
             color="primary"
             className={classes.fab}
-            onClick={() => setOpen(prev => !prev)}
-            aria-label={open ? 'Close chat' : 'Open chat'}
+            onClick={() => setOpen((prev) => !prev)}
+            aria-label={open ? "Close chat" : "Open chat"}
           >
             {open ? <CloseIcon /> : <ChatIcon />}
           </Fab>

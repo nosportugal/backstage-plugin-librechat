@@ -1,28 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { makeStyles, Theme } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import MenuItem from '@material-ui/core/MenuItem';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import ErrorIcon from '@material-ui/icons/Error';
-import CheckIcon from '@material-ui/icons/Check';
-import { useApi } from '@backstage/frontend-plugin-api';
-import { libreChatApiRef, Agent } from '../api';
-import { useLibreChatSettings } from '../hooks/useLibreChatSettings';
+import React, {useState, useEffect} from "react";
+import {makeStyles, Theme} from "@material-ui/core/styles";
+import TextField from "@material-ui/core/TextField";
+import Button from "@material-ui/core/Button";
+import IconButton from "@material-ui/core/IconButton";
+import Typography from "@material-ui/core/Typography";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import MenuItem from "@material-ui/core/MenuItem";
+import ArrowBackIcon from "@material-ui/icons/ArrowBack";
+import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import ErrorIcon from "@material-ui/icons/Error";
+import CheckIcon from "@material-ui/icons/Check";
+import {useApi} from "@backstage/frontend-plugin-api";
+import {libreChatApiRef, Agent} from "../api";
+import {useLibreChatSettings} from "../hooks/useLibreChatSettings";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
   },
   header: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     padding: theme.spacing(1, 2),
     borderBottom: `1px solid ${theme.palette.divider}`,
     gap: theme.spacing(1),
@@ -30,25 +30,25 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   headerTitle: {
     fontWeight: 600,
-    fontSize: '0.95rem',
+    fontSize: "0.95rem",
   },
   content: {
     flex: 1,
     padding: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     gap: theme.spacing(2),
-    overflow: 'auto',
+    overflow: "auto",
   },
   description: {
-    fontSize: '0.85rem',
+    fontSize: "0.85rem",
     color: theme.palette.text.secondary,
     marginBottom: theme.spacing(1),
   },
   apiKeyRow: {
-    display: 'flex',
+    display: "flex",
     gap: theme.spacing(1),
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   apiKeyField: {
     flex: 1,
@@ -61,27 +61,27 @@ const useStyles = makeStyles((theme: Theme) => ({
     padding: 0,
   },
   statusRow: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: theme.spacing(0.5),
-    fontSize: '0.85rem',
+    fontSize: "0.85rem",
   },
   successText: {
-    color: theme.palette.success?.main ?? '#4caf50',
-    fontSize: '0.85rem',
+    color: theme.palette.success?.main ?? "#4caf50",
+    fontSize: "0.85rem",
   },
   errorText: {
     color: theme.palette.error.main,
-    fontSize: '0.85rem',
+    fontSize: "0.85rem",
   },
   actions: {
-    display: 'flex',
+    display: "flex",
     gap: theme.spacing(1),
     marginTop: theme.spacing(1),
   },
   success: {
-    color: theme.palette.success?.main ?? '#4caf50',
-    fontSize: '0.85rem',
+    color: theme.palette.success?.main ?? "#4caf50",
+    fontSize: "0.85rem",
     marginTop: theme.spacing(1),
   },
 }));
@@ -90,10 +90,10 @@ interface SettingsTabProps {
   onBack: () => void;
 }
 
-export function SettingsTab({ onBack }: SettingsTabProps) {
+export function SettingsTab({onBack}: SettingsTabProps) {
   const classes = useStyles();
   const libreChatApi = useApi(libreChatApiRef);
-  const { settings, saveSettings, clearSettings } = useLibreChatSettings();
+  const {settings, saveSettings, clearSettings} = useLibreChatSettings();
 
   const [apiKey, setApiKey] = useState(settings.apiKey);
   const [agentId, setAgentId] = useState(settings.agentId);
@@ -103,8 +103,10 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
   // Agent listing state
   const [agents, setAgents] = useState<Agent[]>([]);
   const [testing, setTesting] = useState(false);
-  const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [testError, setTestError] = useState('');
+  const [testStatus, setTestStatus] = useState<"idle" | "success" | "error">(
+    "idle",
+  );
+  const [testError, setTestError] = useState("");
 
   useEffect(() => {
     setApiKey(settings.apiKey);
@@ -116,14 +118,14 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
     if (!apiKey.trim()) return;
 
     setTesting(true);
-    setTestStatus('idle');
-    setTestError('');
+    setTestStatus("idle");
+    setTestError("");
     setAgents([]);
 
     try {
       const result = await libreChatApi.listAgents(apiKey.trim());
       setAgents(result);
-      setTestStatus('success');
+      setTestStatus("success");
 
       // If we have agents and no agent is selected, pick the first one
       if (result.length > 0 && !agentId) {
@@ -131,8 +133,8 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
         setAgentName(result[0].name);
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Connection failed';
-      setTestStatus('error');
+      const message = err instanceof Error ? err.message : "Connection failed";
+      setTestStatus("error");
       setTestError(message);
     } finally {
       setTesting(false);
@@ -140,18 +142,18 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
   };
 
   const handleSave = async () => {
-    await saveSettings({ apiKey, agentId, agentName });
+    await saveSettings({apiKey, agentId, agentName});
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
   const handleClear = async () => {
     await clearSettings();
-    setApiKey('');
-    setAgentId('');
-    setAgentName('');
+    setApiKey("");
+    setAgentId("");
+    setAgentName("");
     setAgents([]);
-    setTestStatus('idle');
+    setTestStatus("idle");
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -179,11 +181,11 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
             size="small"
             type="password"
             value={apiKey}
-            onChange={e => {
+            onChange={(e) => {
               setApiKey(e.target.value);
               // Reset test state when key changes
-              if (testStatus !== 'idle') {
-                setTestStatus('idle');
+              if (testStatus !== "idle") {
+                setTestStatus("idle");
                 setAgents([]);
               }
             }}
@@ -202,21 +204,20 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
           </Button>
         </div>
 
-        {testStatus === 'success' && (
+        {testStatus === "success" && (
           <div className={classes.statusRow}>
-            <CheckCircleIcon style={{ fontSize: 16, color: '#4caf50' }} />
+            <CheckCircleIcon style={{fontSize: 16, color: "#4caf50"}} />
             <Typography className={classes.successText}>
-              Connected — {agents.length} agent{agents.length !== 1 ? 's' : ''} found
+              Connected — {agents.length} agent{agents.length !== 1 ? "s" : ""}{" "}
+              found
             </Typography>
           </div>
         )}
 
-        {testStatus === 'error' && (
+        {testStatus === "error" && (
           <div className={classes.statusRow}>
-            <ErrorIcon style={{ fontSize: 16 }} color="error" />
-            <Typography className={classes.errorText}>
-              {testError}
-            </Typography>
+            <ErrorIcon style={{fontSize: 16}} color="error" />
+            <Typography className={classes.errorText}>{testError}</Typography>
           </div>
         )}
 
@@ -228,15 +229,15 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
             select
             fullWidth
             value={agentId}
-            onChange={e => {
+            onChange={(e) => {
               const id = e.target.value;
               setAgentId(id);
-              const match = agents.find(a => a.id === id);
+              const match = agents.find((a) => a.id === id);
               setAgentName(match?.name ?? id);
             }}
             helperText="Select the agent to use for conversations"
           >
-            {agents.map(agent => (
+            {agents.map((agent) => (
               <MenuItem key={agent.id} value={agent.id}>
                 {agent.name}
               </MenuItem>
@@ -249,7 +250,7 @@ export function SettingsTab({ onBack }: SettingsTabProps) {
             size="small"
             fullWidth
             value={agentId}
-            onChange={e => setAgentId(e.target.value)}
+            onChange={(e) => setAgentId(e.target.value)}
             placeholder="e.g. agent_abc123"
             helperText="Enter your API key and click Test to load agents, or type an ID manually"
           />

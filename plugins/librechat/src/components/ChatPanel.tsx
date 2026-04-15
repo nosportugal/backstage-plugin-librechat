@@ -1,61 +1,61 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { flushSync } from 'react-dom';
-import { makeStyles, Theme } from '@material-ui/core/styles';
-import IconButton from '@material-ui/core/IconButton';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import SendIcon from '@material-ui/icons/Send';
-import SettingsIcon from '@material-ui/icons/Settings';
-import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
-import { useApi } from '@backstage/frontend-plugin-api';
-import { libreChatApiRef, ChatMessage as ChatMessageType } from '../api';
-import { ChatMessage } from './ChatMessage';
-import { SettingsTab } from './SettingsTab';
-import { useLibreChatSettings } from '../hooks/useLibreChatSettings';
+import React, {useState, useRef, useEffect, useCallback} from "react";
+import {flushSync} from "react-dom";
+import {makeStyles, Theme} from "@material-ui/core/styles";
+import IconButton from "@material-ui/core/IconButton";
+import TextField from "@material-ui/core/TextField";
+import Typography from "@material-ui/core/Typography";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import SendIcon from "@material-ui/icons/Send";
+import SettingsIcon from "@material-ui/icons/Settings";
+import DeleteSweepIcon from "@material-ui/icons/DeleteSweep";
+import {useApi} from "@backstage/frontend-plugin-api";
+import {libreChatApiRef, ChatMessage as ChatMessageType} from "../api";
+import {ChatMessage} from "./ChatMessage";
+import {SettingsTab} from "./SettingsTab";
+import {useLibreChatSettings} from "../hooks/useLibreChatSettings";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
     background: theme.palette.background.paper,
   },
   header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: theme.spacing(1, 2),
     borderBottom: `1px solid ${theme.palette.divider}`,
     minHeight: 48,
   },
   headerTitle: {
     fontWeight: 600,
-    fontSize: '0.95rem',
+    fontSize: "0.95rem",
   },
   headerActions: {
-    display: 'flex',
+    display: "flex",
     gap: theme.spacing(0.5),
   },
   messages: {
     flex: 1,
-    overflowY: 'auto',
+    overflowY: "auto",
     padding: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
   },
   emptyState: {
-    display: 'flex',
+    display: "flex",
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     color: theme.palette.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
     padding: theme.spacing(3),
   },
   inputArea: {
-    display: 'flex',
-    alignItems: 'flex-end',
+    display: "flex",
+    alignItems: "flex-end",
     padding: theme.spacing(1, 2, 2),
     gap: theme.spacing(1),
     borderTop: `1px solid ${theme.palette.divider}`,
@@ -69,17 +69,17 @@ const useStyles = makeStyles((theme: Theme) => ({
     background: theme.palette.error.light,
     color: theme.palette.error.contrastText,
     borderRadius: 6,
-    fontSize: '0.85rem',
+    fontSize: "0.85rem",
   },
 }));
 
 export function ChatPanel() {
   const classes = useStyles();
   const libreChatApi = useApi(libreChatApiRef);
-  const { settings } = useLibreChatSettings();
+  const {settings} = useLibreChatSettings();
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -88,7 +88,7 @@ export function ChatPanel() {
   const abortRef = useRef(false);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
   }, []);
 
   useEffect(() => {
@@ -100,17 +100,17 @@ export function ChatPanel() {
     if (!trimmed || isStreaming) return;
 
     setError(null);
-    const userMessage: ChatMessageType = { role: 'user', content: trimmed };
+    const userMessage: ChatMessageType = {role: "user", content: trimmed};
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    setInput('');
+    setInput("");
     setIsStreaming(true);
     abortRef.current = false;
 
     // Add placeholder for assistant response
     const assistantMessage: ChatMessageType = {
-      role: 'assistant',
-      content: '',
+      role: "assistant",
+      content: "",
     };
     setMessages([...updatedMessages, assistantMessage]);
 
@@ -120,18 +120,18 @@ export function ChatPanel() {
         apiKey: settings.apiKey || undefined,
       });
 
-      let accumulated = '';
+      let accumulated = "";
       for await (const chunk of stream) {
         if (abortRef.current) break;
         accumulated += chunk;
         const content = accumulated;
         // Force synchronous render + wait for browser paint
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
           flushSync(() => {
-            setMessages(prev => {
+            setMessages((prev) => {
               const updated = [...prev];
               updated[updated.length - 1] = {
-                role: 'assistant',
+                role: "assistant",
                 content,
               };
               return updated;
@@ -146,7 +146,7 @@ export function ChatPanel() {
         setMessages(updatedMessages);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
       // Remove the empty assistant placeholder on error
       setMessages(updatedMessages);
@@ -157,7 +157,7 @@ export function ChatPanel() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
       }
@@ -183,7 +183,7 @@ export function ChatPanel() {
     <div className={classes.root}>
       <div className={classes.header}>
         <Typography className={classes.headerTitle}>
-          {settings.agentName || 'AI Chat'}
+          {settings.agentName || "AI Chat"}
         </Typography>
         <div className={classes.headerActions}>
           <IconButton size="small" onClick={handleClear} title="Clear chat">
@@ -208,7 +208,11 @@ export function ChatPanel() {
           </div>
         ) : (
           messages.map((msg, idx) => (
-            <ChatMessage key={idx} message={msg} agentName={settings.agentName} />
+            <ChatMessage
+              key={idx}
+              message={msg}
+              agentName={settings.agentName}
+            />
           ))
         )}
         <div ref={messagesEndRef} />
@@ -225,7 +229,7 @@ export function ChatPanel() {
           multiline
           maxRows={4}
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isStreaming}
           autoFocus
@@ -236,11 +240,7 @@ export function ChatPanel() {
           disabled={isStreaming || !input.trim()}
           title="Send message"
         >
-          {isStreaming ? (
-            <CircularProgress size={24} />
-          ) : (
-            <SendIcon />
-          )}
+          {isStreaming ? <CircularProgress size={24} /> : <SendIcon />}
         </IconButton>
       </div>
     </div>

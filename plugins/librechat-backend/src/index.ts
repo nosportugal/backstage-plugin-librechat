@@ -1,1 +1,1 @@
-export { libreChatPlugin as default } from './plugin';
+export {libreChatPlugin as default} from "./plugin";

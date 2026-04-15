@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   createFrontendPlugin,
   ApiBlueprint,
@@ -6,26 +6,26 @@ import {
   fetchApiRef,
   configApiRef,
   createApiFactory,
-} from '@backstage/frontend-plugin-api';
-import { libreChatApiRef, DefaultLibreChatApi } from './api';
-import { ChatBubble } from './components/ChatBubble';
+} from "@backstage/frontend-plugin-api";
+import {libreChatApiRef, DefaultLibreChatApi} from "./api";
+import {ChatBubble} from "./components/ChatBubble";
 
 /** Utility API extension providing the LibreChat API client. */
 const libreChatApi = ApiBlueprint.make({
-  name: 'librechat',
+  name: "librechat",
   params: {
     factory: createApiFactory({
       api: libreChatApiRef,
-      deps: { fetchApi: fetchApiRef, configApi: configApiRef },
-      factory: ({ fetchApi, configApi }) =>
-        new DefaultLibreChatApi({ fetchApi, configApi }),
+      deps: {fetchApi: fetchApiRef, configApi: configApiRef},
+      factory: ({fetchApi, configApi}) =>
+        new DefaultLibreChatApi({fetchApi, configApi}),
     }),
   },
 });
 
 /** Global chat bubble overlay rendered across all pages. */
 const chatBubbleRootElement = AppRootElementBlueprint.make({
-  name: 'chat-bubble',
+  name: "chat-bubble",
   params: {
     element: <ChatBubble />,
   },
@@ -40,6 +40,6 @@ const chatBubbleRootElement = AppRootElementBlueprint.make({
  * @public
  */
 export const libreChatPlugin = createFrontendPlugin({
-  pluginId: 'librechat',
+  pluginId: "librechat",
   extensions: [libreChatApi, chatBubbleRootElement],
 });
