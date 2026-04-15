@@ -12,5 +12,12 @@ export interface Config {
      * @visibility frontend
      */
     baseUrl?: string;
+
+    /**
+     * Display name for the chat agent.
+     * Used in the chat header ("<name> Chat") and message labels.
+     * @visibility frontend
+     */
+    name?: string;
   };
 }

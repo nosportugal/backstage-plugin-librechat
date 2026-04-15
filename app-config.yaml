@@ -15,6 +15,8 @@ backend:
 librechat:
   # Enable the chat bubble without needing the feature flag
   enabled: true
+  # Display name for the chat agent
+  name: NOS-GPT
   # Required: URL of your LibreChat instance
   baseUrl: https://nos-gpt-staging.oizys.clg.nos.pt
   # Optional: Default API key (users can override in Settings)
