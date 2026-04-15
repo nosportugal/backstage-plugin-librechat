@@ -8,11 +8,13 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import SendIcon from "@material-ui/icons/Send";
 import SettingsIcon from "@material-ui/icons/Settings";
 import DeleteSweepIcon from "@material-ui/icons/DeleteSweep";
+import LinkIcon from "@material-ui/icons/Link";
 import {useApi} from "@backstage/frontend-plugin-api";
 import {libreChatApiRef, ChatMessage as ChatMessageType} from "../api";
 import {ChatMessage} from "./ChatMessage";
 import {SettingsTab} from "./SettingsTab";
 import {useLibreChatSettings} from "../hooks/useLibreChatSettings";
+import {usePageContext} from "../hooks/usePageContext";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -71,12 +73,30 @@ const useStyles = makeStyles((theme: Theme) => ({
     borderRadius: 6,
     fontSize: "0.85rem",
   },
+  contextBar: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(0.5),
+    padding: theme.spacing(0.5, 2),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    background: theme.palette.type === "dark" ? "#1a1a2e" : "#f5f7ff",
+    fontSize: "0.75rem",
+    color: theme.palette.text.secondary,
+    overflow: "hidden",
+    whiteSpace: "nowrap" as const,
+    textOverflow: "ellipsis",
+  },
+  contextIcon: {
+    fontSize: 14,
+    opacity: 0.6,
+  },
 }));
 
 export function ChatPanel() {
   const classes = useStyles();
   const libreChatApi = useApi(libreChatApiRef);
   const {settings} = useLibreChatSettings();
+  const pageContext = usePageContext();
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState("");
@@ -115,7 +135,20 @@ export function ChatPanel() {
     setMessages([...updatedMessages, assistantMessage]);
 
     try {
-      const stream = libreChatApi.sendMessage(updatedMessages, {
+      // Prepend page context so the agent knows what the user is viewing
+      const contextMessage: ChatMessageType = {
+        role: "system",
+        content: [
+          "The user is currently viewing a Backstage page with the following context:",
+          `- Page title: ${pageContext.title}`,
+          `- Page path: ${pageContext.path}`,
+          `- Full URL: ${pageContext.url}`,
+          "Use this context to provide relevant answers about what they are looking at.",
+        ].join("\n"),
+      };
+      const messagesWithContext = [contextMessage, ...updatedMessages];
+
+      const stream = libreChatApi.sendMessage(messagesWithContext, {
         apiKey: settings.apiKey || undefined,
       });
 
@@ -218,6 +251,11 @@ export function ChatPanel() {
             <SettingsIcon fontSize="small" />
           </IconButton>
         </div>
+      </div>
+
+      <div className={classes.contextBar} title={pageContext.url}>
+        <LinkIcon className={classes.contextIcon} />
+        <span>{pageContext.title || pageContext.path}</span>
       </div>
 
       <div className={classes.messages}>
