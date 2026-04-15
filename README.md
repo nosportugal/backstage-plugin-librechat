@@ -16,16 +16,16 @@ Ask questions about the page you're viewing, get contextual answers, and chat wi
 
 ## ✨ Features
 
-| Feature | Description |
-| --- | --- |
-| 💬 **Floating Chat Bubble** | Persistent AI chat overlay across all Backstage pages |
-| 📄 **Page Context Awareness** | Automatically sends the current page title, path, and URL to the agent |
-| ⚡ **Streaming Responses** | Real-time SSE streaming from the LibreChat Agents API |
-| 📝 **Markdown Rendering** | Full GitHub Flavored Markdown support (code blocks, tables, lists) |
-| 🔐 **Secure Backend Proxy** | API keys stay server-side in `app-config.yaml` |
-| 🔑 **User API Key Override** | Users can provide their own API key via in-chat settings |
-| ✅ **API Key Validation** | Test your API key with a single click — response appears as a chat bubble |
-| ⚙️ **Configurable** | Agent ID and base URL set centrally; users only manage their API key |
+| Feature                       | Description                                                               |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| 💬 **Floating Chat Bubble**   | Persistent AI chat overlay across all Backstage pages                     |
+| 📄 **Page Context Awareness** | Automatically sends the current page title, path, and URL to the agent    |
+| ⚡ **Streaming Responses**    | Real-time SSE streaming from the LibreChat Agents API                     |
+| 📝 **Markdown Rendering**     | Full GitHub Flavored Markdown support (code blocks, tables, lists)        |
+| 🔐 **Secure Backend Proxy**   | API keys stay server-side in `app-config.yaml`                            |
+| 🔑 **User API Key Override**  | Users can provide their own API key via in-chat settings                  |
+| ✅ **API Key Validation**     | Test your API key with a single click — response appears as a chat bubble |
+| ⚙️ **Configurable**           | Agent ID and base URL set centrally; users only manage their API key      |
 
 ---
 
@@ -35,20 +35,20 @@ Ask questions about the page you're viewing, get contextual answers, and chat wi
 User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreChat Agents API (stream)
 ```
 
-| Layer | Responsibility |
-| --- | --- |
-| **Frontend Plugin** | Chat bubble UI, page context capture, settings, API client |
-| **Backend Plugin** | Proxies streaming requests to LibreChat, manages API keys and agent ID |
-| **LibreChat Agent** | AI agent configured in LibreChat — referenced by `agentId` in config |
+| Layer               | Responsibility                                                         |
+| ------------------- | ---------------------------------------------------------------------- |
+| **Frontend Plugin** | Chat bubble UI, page context capture, settings, API client             |
+| **Backend Plugin**  | Proxies streaming requests to LibreChat, manages API keys and agent ID |
+| **LibreChat Agent** | AI agent configured in LibreChat — referenced by `agentId` in config   |
 
 ---
 
 ## 📦 Packages
 
-| Package | Description |
-| --- | --- |
-| `@nosportugal/backstage-plugin-librechat` | Frontend plugin — chat bubble, settings, streaming client |
-| `@nosportugal/backstage-plugin-librechat-backend` | Backend plugin — proxies requests to LibreChat |
+| Package                                           | Description                                               |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| `@nosportugal/backstage-plugin-librechat`         | Frontend plugin — chat bubble, settings, streaming client |
+| `@nosportugal/backstage-plugin-librechat-backend` | Backend plugin — proxies requests to LibreChat            |
 
 ---
 
@@ -97,12 +97,12 @@ librechat:
   apiKey: your-librechat-api-key
 ```
 
-| Setting | Required | Description |
-| --- | --- | --- |
-| `baseUrl` | ✅ | URL of your LibreChat instance |
-| `agentId` | ✅ | Agent ID configured in LibreChat |
-| `apiKey` | ❌ | Default API key (users can override) |
-| `enabled` | ❌ | Enable/disable the chat bubble (default: `true`) |
+| Setting   | Required | Description                                      |
+| --------- | -------- | ------------------------------------------------ |
+| `baseUrl` | ✅       | URL of your LibreChat instance                   |
+| `agentId` | ✅       | Agent ID configured in LibreChat                 |
+| `apiKey`  | ❌       | Default API key (users can override)             |
+| `enabled` | ❌       | Enable/disable the chat bubble (default: `true`) |
 
 ### 4 · Use it
 
@@ -186,26 +186,26 @@ yarn start:backend   # Backend dev server (port 7007)
 
 ### Available Scripts
 
-| Script | Description |
-| --- | --- |
-| `yarn start` | Start the frontend dev server |
-| `yarn start:backend` | Start the backend dev server |
-| `yarn start:dev` | Start both frontend and backend |
-| `yarn build` | Build all packages |
-| `yarn tsc` | Type-check all packages |
-| `yarn lint` | Lint all packages |
-| `yarn clean` | Clean build artifacts |
+| Script               | Description                     |
+| -------------------- | ------------------------------- |
+| `yarn start`         | Start the frontend dev server   |
+| `yarn start:backend` | Start the backend dev server    |
+| `yarn start:dev`     | Start both frontend and backend |
+| `yarn build`         | Build all packages              |
+| `yarn tsc`           | Type-check all packages         |
+| `yarn lint`          | Lint all packages               |
+| `yarn clean`         | Clean build artifacts           |
 
 ---
 
 ## 🛡️ Security
 
-| Concern | How it's handled |
-| --- | --- |
-| **API key storage** | Default key in `app-config.yaml` (server-side, `@visibility secret`). User overrides stored in browser via Backstage Storage API |
-| **Backend proxy** | All LibreChat requests go through the backend — API keys never exposed to the browser |
-| **Input validation** | Messages validated for role, length, and format before proxying |
-| **Agent ID** | Sanitized with strict alphanumeric pattern; configured server-side only |
+| Concern              | How it's handled                                                                                                                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **API key storage**  | Default key in `app-config.yaml` (server-side, `@visibility secret`). User overrides stored in browser via Backstage Storage API |
+| **Backend proxy**    | All LibreChat requests go through the backend — API keys never exposed to the browser                                            |
+| **Input validation** | Messages validated for role, length, and format before proxying                                                                  |
+| **Agent ID**         | Sanitized with strict alphanumeric pattern; configured server-side only                                                          |
 
 ---
 
