@@ -7,7 +7,7 @@
 Ask questions about the page you're viewing, get contextual answers, and chat with your AI agent — all through a floating chat bubble powered by your own [LibreChat](https://www.librechat.ai/) instance.
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D24-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Backstage](https://img.shields.io/badge/Backstage-Plugin-9BF0E1?logo=backstage&logoColor=black)](https://backstage.io/)
 
 </div>
@@ -64,7 +64,7 @@ User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreC
 
 Before you begin, make sure you have:
 
-- **[Node.js](https://nodejs.org/)** v18 or later
+- **[Node.js](https://nodejs.org/)** v24 or later
 - **[Yarn](https://yarnpkg.com/)** v4+
 - A **[Backstage](https://backstage.io/)** instance
 - A running **[LibreChat](https://www.librechat.ai/)** instance with the Agents API enabled
