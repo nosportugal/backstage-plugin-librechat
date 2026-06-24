@@ -34,8 +34,8 @@ Register the plugin as a feature in your app entry point. With the new frontend 
 
 ```typescript
 // packages/app/src/App.tsx
-import { createApp } from '@backstage/frontend-defaults';
-import libreChatPlugin from '@nosportugal/backstage-plugin-librechat';
+import {createApp} from "@backstage/frontend-defaults";
+import libreChatPlugin from "@nosportugal/backstage-plugin-librechat";
 
 const app = createApp({
   features: [libreChatPlugin],
@@ -64,13 +64,13 @@ librechat:
   enabled: true
 ```
 
-| Setting   | Required | Visibility | Description                                                              |
-| --------- | -------- | ---------- | ------------------------------------------------------------------------ |
-| `baseUrl` | ✅       | frontend   | URL of your LibreChat instance                                           |
-| `agentId` | ✅       | backend    | Agent ID configured in LibreChat, used as the completion model           |
-| `apiKey`  | ❌       | secret     | Default API key; users can override it per-request from the chat UI      |
-| `name`    | ❌       | frontend   | Display name in the chat header and messages (default: `AI`)             |
-| `enabled` | ❌       | frontend   | Show or hide the chat bubble (default: `true`)                           |
+| Setting   | Required | Visibility | Description                                                         |
+| --------- | -------- | ---------- | ------------------------------------------------------------------- |
+| `baseUrl` | ✅       | frontend   | URL of your LibreChat instance                                      |
+| `agentId` | ✅       | backend    | Agent ID configured in LibreChat, used as the completion model      |
+| `apiKey`  | ❌       | secret     | Default API key; users can override it per-request from the chat UI |
+| `name`    | ❌       | frontend   | Display name in the chat header and messages (default: `AI`)        |
+| `enabled` | ❌       | frontend   | Show or hide the chat bubble (default: `true`)                      |
 
 > [!NOTE]
 > `agentId` and `apiKey` are only read server-side by the backend plugin and are never exposed to the browser. `baseUrl`, `name`, and `enabled` are visible to the frontend.
@@ -79,8 +79,8 @@ librechat:
 
 The backend plugin mounts under `/api/librechat`:
 
-| Method | Path     | Description                                                              |
-| ------ | -------- | ------------------------------------------------------------------------ |
+| Method | Path     | Description                                                               |
+| ------ | -------- | ------------------------------------------------------------------------- |
 | `POST` | `/chat`  | Proxies a chat completion to LibreChat and streams the SSE response back. |
 | `POST` | `/check` | Validates an API key by sending a short test message to LibreChat.        |
 
