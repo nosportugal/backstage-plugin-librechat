@@ -20,12 +20,12 @@ Add the plugin to your backend:
 
 ```typescript
 // packages/backend/src/index.ts
-import { createBackend } from '@backstage/backend-defaults';
+import {createBackend} from "@backstage/backend-defaults";
 
 const backend = createBackend();
 
 // ...other plugins
-backend.add(import('@nosportugal/backstage-plugin-librechat-backend'));
+backend.add(import("@nosportugal/backstage-plugin-librechat-backend"));
 
 backend.start();
 ```
