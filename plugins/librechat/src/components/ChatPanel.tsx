@@ -273,7 +273,16 @@ export function ChatPanel() {
           </div>
         ) : (
           messages.map((msg, idx) => (
-            <ChatMessage key={idx} message={msg} agentName={agentName} />
+            <ChatMessage
+              key={idx}
+              message={msg}
+              agentName={agentName}
+              loading={
+                isStreaming &&
+                idx === messages.length - 1 &&
+                msg.role === "assistant"
+              }
+            />
           ))
         )}
         <div ref={messagesEndRef} />
