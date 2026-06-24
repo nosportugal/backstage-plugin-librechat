@@ -2,16 +2,10 @@ import React from "react";
 import {createDevApp} from "@backstage/frontend-dev-utils";
 import {
   createFrontendPlugin,
-  createFrontendModule,
   PageBlueprint,
-  ApiBlueprint,
   createRouteRef,
-  fetchApiRef,
-  configApiRef,
-  createApiFactory,
 } from "@backstage/frontend-plugin-api";
 import libreChatPlugin from "../src";
-import {libreChatApiRef, DefaultLibreChatApi} from "../src/api";
 import {ChatBubble} from "../src/components/ChatBubble";
 
 const devRouteRef = createRouteRef();
@@ -31,23 +25,9 @@ const devPage = PageBlueprint.make({
   },
 });
 
-/** Register the LibreChat API explicitly for the dev app */
-const devLibreChatApi = ApiBlueprint.make({
-  name: "librechat",
-  params: defineParams =>
-    defineParams(
-      createApiFactory({
-        api: libreChatApiRef,
-        deps: {fetchApi: fetchApiRef, configApi: configApiRef},
-        factory: ({fetchApi, configApi}) =>
-          new DefaultLibreChatApi({fetchApi, configApi}),
-      }),
-    ),
-});
-
 const devPlugin = createFrontendPlugin({
   pluginId: "dev",
-  extensions: [devPage, devLibreChatApi],
+  extensions: [devPage],
   routes: {root: devRouteRef},
 });
 
