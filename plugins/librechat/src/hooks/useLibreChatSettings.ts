@@ -42,7 +42,11 @@ export function useLibreChatSettings() {
 
   const saveSettings = useCallback(
     async (newSettings: LibreChatSettings) => {
-      await bucket.set(API_KEY_KEY, newSettings.apiKey || undefined);
+      if (newSettings.apiKey) {
+        await bucket.set(API_KEY_KEY, newSettings.apiKey);
+      } else {
+        await bucket.remove(API_KEY_KEY);
+      }
     },
     [bucket],
   );

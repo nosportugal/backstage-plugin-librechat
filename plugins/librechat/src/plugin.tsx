@@ -13,14 +13,15 @@ import {ChatBubble} from "./components/ChatBubble";
 /** Utility API extension providing the LibreChat API client. */
 const libreChatApi = ApiBlueprint.make({
   name: "librechat",
-  params: {
-    factory: createApiFactory({
-      api: libreChatApiRef,
-      deps: {fetchApi: fetchApiRef, configApi: configApiRef},
-      factory: ({fetchApi, configApi}) =>
-        new DefaultLibreChatApi({fetchApi, configApi}),
-    }),
-  },
+  params: defineParams =>
+    defineParams(
+      createApiFactory({
+        api: libreChatApiRef,
+        deps: {fetchApi: fetchApiRef, configApi: configApiRef},
+        factory: ({fetchApi, configApi}) =>
+          new DefaultLibreChatApi({fetchApi, configApi}),
+      }),
+    ),
 });
 
 /** Global chat bubble overlay rendered across all pages. */

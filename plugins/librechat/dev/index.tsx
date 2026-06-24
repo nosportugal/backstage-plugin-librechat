@@ -19,7 +19,7 @@ const devRouteRef = createRouteRef();
 const devPage = PageBlueprint.make({
   name: "home",
   params: {
-    defaultPath: "/",
+    path: "/",
     routeRef: devRouteRef,
     loader: async () => (
       <div style={{padding: 32}}>
@@ -34,14 +34,15 @@ const devPage = PageBlueprint.make({
 /** Register the LibreChat API explicitly for the dev app */
 const devLibreChatApi = ApiBlueprint.make({
   name: "librechat",
-  params: {
-    factory: createApiFactory({
-      api: libreChatApiRef,
-      deps: {fetchApi: fetchApiRef, configApi: configApiRef},
-      factory: ({fetchApi, configApi}) =>
-        new DefaultLibreChatApi({fetchApi, configApi}),
-    }),
-  },
+  params: defineParams =>
+    defineParams(
+      createApiFactory({
+        api: libreChatApiRef,
+        deps: {fetchApi: fetchApiRef, configApi: configApiRef},
+        factory: ({fetchApi, configApi}) =>
+          new DefaultLibreChatApi({fetchApi, configApi}),
+      }),
+    ),
 });
 
 const devPlugin = createFrontendPlugin({
