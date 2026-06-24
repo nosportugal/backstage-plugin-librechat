@@ -5,8 +5,10 @@
     "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "declaration": true,
     "declarationMap": true,
+    "declarationDir": "dist-types",
+    "emitDeclarationOnly": true,
     "sourceMap": true,
-    "outDir": "dist",
+    "outDir": "dist-types",
     "strict": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -19,5 +21,5 @@
     "jsx": "react-jsx",
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "dist-types"]
 }
