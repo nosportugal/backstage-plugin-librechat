@@ -16,7 +16,7 @@ export interface PageContext {
 function normalizeTitle(title: string): string {
   const parts = title
     .split("|")
-    .map(part => part.trim())
+    .map((part) => part.trim())
     .filter(Boolean);
   const deduped = parts.filter((part, index) => part !== parts[index - 1]);
   return deduped.join(" | ");

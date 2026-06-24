@@ -131,10 +131,7 @@ export function ChatMessage({
         {isUser ? (
           <Typography variant="body2">{message.content}</Typography>
         ) : showTyping ? (
-          <div
-            className={classes.typing}
-            aria-label={`${agentName} is typing`}
-          >
+          <div className={classes.typing} aria-label={`${agentName} is typing`}>
             <span className={classes.dot} />
             <span className={`${classes.dot} ${classes.dot2}`} />
             <span className={`${classes.dot} ${classes.dot3}`} />
