@@ -74,16 +74,45 @@ const useStyles = makeStyles((theme: Theme) => ({
     color: theme.palette.text.primary,
     borderBottomLeftRadius: 4,
   },
+  "@keyframes typingBounce": {
+    "0%, 80%, 100%": {transform: "translateY(0)", opacity: 0.35},
+    "40%": {transform: "translateY(-4px)", opacity: 1},
+  },
+  typing: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    padding: theme.spacing(0.5, 0),
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: "50%",
+    background: theme.palette.text.secondary,
+    animation: "$typingBounce 1.2s infinite ease-in-out both",
+  },
+  dot2: {
+    animationDelay: "0.2s",
+  },
+  dot3: {
+    animationDelay: "0.4s",
+  },
 }));
 
 interface ChatMessageProps {
   message: ChatMessageType;
   agentName?: string;
+  loading?: boolean;
 }
 
-export function ChatMessage({message, agentName = "AI"}: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  agentName = "AI",
+  loading = false,
+}: ChatMessageProps) {
   const classes = useStyles();
   const isUser = message.role === "user";
+  const showTyping = !isUser && loading && !message.content;
 
   return (
     <div
@@ -101,6 +130,15 @@ export function ChatMessage({message, agentName = "AI"}: ChatMessageProps) {
       >
         {isUser ? (
           <Typography variant="body2">{message.content}</Typography>
+        ) : showTyping ? (
+          <div
+            className={classes.typing}
+            aria-label={`${agentName} is typing`}
+          >
+            <span className={classes.dot} />
+            <span className={`${classes.dot} ${classes.dot2}`} />
+            <span className={`${classes.dot} ${classes.dot3}`} />
+          </div>
         ) : (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {message.content}
