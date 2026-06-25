@@ -15,6 +15,10 @@
     "test": "yarn workspaces foreach -A run test",
     "clean": "yarn workspaces foreach -A run clean"
   },
+  "devDependencies": {
+    "@backstage/cli": "^0.36.0",
+    "@backstage/cli-defaults": "^0.1.0"
+  },
   "resolutions": {
     "ws": "8.21.0",
     "undici@npm:^5.28.2": "6.27.0",

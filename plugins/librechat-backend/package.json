@@ -10,7 +10,11 @@
   },
   "backstage": {
     "role": "backend-plugin",
-    "pluginId": "librechat"
+    "pluginId": "librechat",
+    "pluginPackages": [
+      "@nosportugal/backstage-plugin-librechat",
+      "@nosportugal/backstage-plugin-librechat-backend"
+    ]
   },
   "scripts": {
     "start": "backstage-cli package start",
