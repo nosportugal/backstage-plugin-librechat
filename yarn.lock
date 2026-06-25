@@ -5609,9 +5609,11 @@ __metadata:
     "@backstage/frontend-dev-utils": "npm:^0.1.0"
     "@backstage/frontend-plugin-api": "npm:^0.15.0"
     "@backstage/theme": "npm:^0.7.0"
+    "@backstage/ui": "npm:^0.14.0"
     "@jest/environment-jsdom-abstract": "npm:^30.0.0"
     "@material-ui/core": "npm:^4.12.4"
     "@material-ui/icons": "npm:^4.11.3"
+    "@remixicon/react": "npm:^4.9.0"
     "@types/react": "npm:^18.2.0"
     "@types/react-dom": "npm:^18.2.0"
     i18next: "npm:^23.0.0"
@@ -6344,7 +6346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@remixicon/react@npm:^4.6.0":
+"@remixicon/react@npm:^4.6.0, @remixicon/react@npm:^4.9.0":
   version: 4.9.0
   resolution: "@remixicon/react@npm:4.9.0"
   peerDependencies:
