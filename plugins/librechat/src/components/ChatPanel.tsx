@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect, useCallback} from "react";
+import {useState, useRef, useEffect, useCallback, KeyboardEvent} from "react";
 import {flushSync} from "react-dom";
 import {makeStyles, Theme} from "@material-ui/core/styles";
 import IconButton from "@material-ui/core/IconButton";
@@ -192,7 +192,7 @@ export function ChatPanel() {
   }, [input, isStreaming, messages, libreChatApi, settings, pageContext]);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
