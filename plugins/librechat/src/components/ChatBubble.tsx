@@ -8,6 +8,7 @@ import ChatIcon from "@material-ui/icons/Chat";
 import CloseIcon from "@material-ui/icons/Close";
 import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {ChatPanel} from "./ChatPanel";
+import {useIsSignedIn} from "../hooks/useIsSignedIn";
 
 const CHAT_WIDTH = 400;
 const CHAT_HEIGHT = 560;
@@ -46,9 +47,10 @@ function useIsEnabled(): boolean {
 export function ChatBubble() {
   const classes = useStyles();
   const enabled = useIsEnabled();
+  const signedIn = useIsSignedIn();
   const [open, setOpen] = useState(false);
 
-  if (!enabled) {
+  if (!enabled || !signedIn) {
     return null;
   }
 
