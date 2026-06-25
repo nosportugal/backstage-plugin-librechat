@@ -189,7 +189,7 @@ export function ChatPanel() {
     } finally {
       setIsStreaming(false);
     }
-  }, [input, isStreaming, messages, libreChatApi, settings]);
+  }, [input, isStreaming, messages, libreChatApi, settings, pageContext]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -302,6 +302,7 @@ export function ChatPanel() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isStreaming}
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
         />
         <IconButton
