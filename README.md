@@ -53,8 +53,8 @@ User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreC
 
 ## 📦 Packages
 
-| Package                                           | Description                                               |
-| ------------------------------------------------- | --------------------------------------------------------- |
+| Package                                     | Description                                               |
+| ------------------------------------------- | --------------------------------------------------------- |
 | `@nospt/backstage-plugin-librechat`         | Frontend plugin — chat bubble, settings, streaming client |
 | `@nospt/backstage-plugin-librechat-backend` | Backend plugin — proxies requests to LibreChat            |
 
