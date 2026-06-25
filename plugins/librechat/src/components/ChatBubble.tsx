@@ -9,9 +9,10 @@ import CloseIcon from "@material-ui/icons/Close";
 import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {ChatPanel} from "./ChatPanel";
 import {useIsSignedIn} from "../hooks/useIsSignedIn";
-
-const CHAT_WIDTH = 400;
-const CHAT_HEIGHT = 560;
+import {
+  useLibreChatSettings,
+  CHAT_SIZE_DIMENSIONS,
+} from "../hooks/useLibreChatSettings";
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
@@ -27,8 +28,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     position: "fixed",
     bottom: theme.spacing(3) + 56 + 12, // fab height + gap
     right: theme.spacing(3),
-    width: CHAT_WIDTH,
-    height: CHAT_HEIGHT,
     maxHeight: "calc(100vh - 120px)",
     borderRadius: 12,
     overflow: "hidden",
@@ -48,17 +47,24 @@ export function ChatBubble() {
   const classes = useStyles();
   const enabled = useIsEnabled();
   const signedIn = useIsSignedIn();
+  const {settings} = useLibreChatSettings();
   const [open, setOpen] = useState(false);
 
   if (!enabled || !signedIn) {
     return null;
   }
 
+  const dimensions = CHAT_SIZE_DIMENSIONS[settings.chatSize];
+
   return (
-    <ClickAwayListener onClickAway={() => {}}>
+    <ClickAwayListener onClickAway={() => setOpen(false)}>
       <div>
         <Slide direction="up" in={open} mountOnEnter unmountOnExit>
-          <Paper className={classes.panel} elevation={16}>
+          <Paper
+            className={classes.panel}
+            elevation={16}
+            style={{width: dimensions.width, height: dimensions.height}}
+          >
             <ChatPanel />
           </Paper>
         </Slide>

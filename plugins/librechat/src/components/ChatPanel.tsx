@@ -207,34 +207,10 @@ export function ChatPanel() {
     abortRef.current = true;
   }, []);
 
-  const handleCheckResult = useCallback(
-    (reply: string, checkError?: string) => {
-      if (checkError) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: `⚠️ API key check failed: ${checkError}`,
-          },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {role: "assistant", content: `✅ API key is valid!\n\n${reply}`},
-        ]);
-      }
-      setShowSettings(false);
-    },
-    [],
-  );
-
   if (showSettings) {
     return (
       <div className={classes.root}>
-        <SettingsTab
-          onBack={() => setShowSettings(false)}
-          onCheckResult={handleCheckResult}
-        />
+        <SettingsTab onBack={() => setShowSettings(false)} />
       </div>
     );
   }
