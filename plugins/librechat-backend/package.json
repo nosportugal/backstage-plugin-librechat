@@ -1,5 +1,5 @@
 {
-  "name": "@nosportugal/backstage-plugin-librechat-backend",
+  "name": "@nospt/backstage-plugin-librechat-backend",
   "version": "0.1.0",
   "description": "Backend plugin for Backstage that proxies requests to LibreChat Agents API",
   "main": "dist/index.cjs.js",
@@ -12,8 +12,8 @@
     "role": "backend-plugin",
     "pluginId": "librechat",
     "pluginPackages": [
-      "@nosportugal/backstage-plugin-librechat",
-      "@nosportugal/backstage-plugin-librechat-backend"
+      "@nospt/backstage-plugin-librechat",
+      "@nospt/backstage-plugin-librechat-backend"
     ]
   },
   "scripts": {

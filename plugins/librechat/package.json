@@ -1,5 +1,5 @@
 {
-  "name": "@nosportugal/backstage-plugin-librechat",
+  "name": "@nospt/backstage-plugin-librechat",
   "version": "0.1.0",
   "description": "Backstage frontend plugin adding an AI chat bubble powered by LibreChat Agents API",
   "main": "dist/index.esm.js",
@@ -12,8 +12,8 @@
     "role": "frontend-plugin",
     "pluginId": "librechat",
     "pluginPackages": [
-      "@nosportugal/backstage-plugin-librechat",
-      "@nosportugal/backstage-plugin-librechat-backend"
+      "@nospt/backstage-plugin-librechat",
+      "@nospt/backstage-plugin-librechat-backend"
     ]
   },
   "configSchema": "config.d.ts",

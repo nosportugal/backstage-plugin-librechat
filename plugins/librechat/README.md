@@ -1,10 +1,10 @@
-# @nosportugal/backstage-plugin-librechat
+# @nospt/backstage-plugin-librechat
 
 > Frontend plugin that adds an AI chat bubble to your Backstage app, powered by the [LibreChat](https://www.librechat.ai/) Agents API.
 
 This is the **frontend** half of the LibreChat plugin. It renders a floating chat bubble across every page of your Backstage app, captures the context of the page you're viewing, streams responses in real time, and renders them as Markdown.
 
-It must be paired with the backend plugin, [`@nosportugal/backstage-plugin-librechat-backend`](../librechat-backend/README.md), which proxies requests to LibreChat and keeps your API keys server-side.
+It must be paired with the backend plugin, [`@nospt/backstage-plugin-librechat-backend`](../librechat-backend/README.md), which proxies requests to LibreChat and keeps your API keys server-side.
 
 ## Features
 
@@ -17,7 +17,7 @@ It must be paired with the backend plugin, [`@nosportugal/backstage-plugin-libre
 ## Prerequisites
 
 - A Backstage app using the **[new frontend system](https://backstage.io/docs/frontend-system/)** (`@backstage/frontend-defaults`).
-- The backend plugin [`@nosportugal/backstage-plugin-librechat-backend`](../librechat-backend/README.md) installed and configured.
+- The backend plugin [`@nospt/backstage-plugin-librechat-backend`](../librechat-backend/README.md) installed and configured.
 - A running [LibreChat](https://www.librechat.ai/) instance with the Agents API enabled.
 
 ## Installation
@@ -25,7 +25,7 @@ It must be paired with the backend plugin, [`@nosportugal/backstage-plugin-libre
 Install the package in your Backstage app package (e.g. `packages/app`):
 
 ```bash
-yarn --cwd packages/app add @nosportugal/backstage-plugin-librechat
+yarn --cwd packages/app add @nospt/backstage-plugin-librechat
 ```
 
 ## Setup
@@ -35,7 +35,7 @@ Register the plugin as a feature in your app entry point. With the new frontend 
 ```typescript
 // packages/app/src/App.tsx
 import {createApp} from "@backstage/frontend-defaults";
-import libreChatPlugin from "@nosportugal/backstage-plugin-librechat";
+import libreChatPlugin from "@nospt/backstage-plugin-librechat";
 
 const app = createApp({
   features: [libreChatPlugin],

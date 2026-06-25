@@ -55,8 +55,8 @@ User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreC
 
 | Package                                           | Description                                               |
 | ------------------------------------------------- | --------------------------------------------------------- |
-| `@nosportugal/backstage-plugin-librechat`         | Frontend plugin — chat bubble, settings, streaming client |
-| `@nosportugal/backstage-plugin-librechat-backend` | Backend plugin — proxies requests to LibreChat            |
+| `@nospt/backstage-plugin-librechat`         | Frontend plugin — chat bubble, settings, streaming client |
+| `@nospt/backstage-plugin-librechat-backend` | Backend plugin — proxies requests to LibreChat            |
 
 ---
 
@@ -77,17 +77,17 @@ Before you begin, make sure you have:
 
 ```bash
 # Frontend
-yarn add @nosportugal/backstage-plugin-librechat
+yarn add @nospt/backstage-plugin-librechat
 
 # Backend
-yarn add @nosportugal/backstage-plugin-librechat-backend
+yarn add @nospt/backstage-plugin-librechat-backend
 ```
 
 ### 2 · Register the backend plugin
 
 ```typescript
 // packages/backend/src/index.ts
-import libreChatBackend from "@nosportugal/backstage-plugin-librechat-backend";
+import libreChatBackend from "@nospt/backstage-plugin-librechat-backend";
 
 const backend = createBackend();
 backend.add(libreChatBackend);
