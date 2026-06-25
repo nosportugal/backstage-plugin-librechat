@@ -1,10 +1,12 @@
-name: Release
+name: CD
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "*"
 
 permissions:
+  id-token: write # Required for npm OIDC trusted publishing
   contents: read
 
 jobs:
@@ -26,10 +28,23 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build
+      - name: Generate type declarations
+        run: yarn tsc
+
+      - name: Build all packages
         run: yarn build
 
-      - name: Publish to npm
-        run: yarn workspaces foreach -A --no-private npm publish --access public --tolerate-republish
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Fix plugin metadata
+        run: yarn backstage-cli repo fix --publish
+
+      - name: Publish backstage-plugin-librechat
+        working-directory: plugins/librechat
+        run: |
+          yarn pack -o package.tgz
+          npm publish package.tgz --access public
+
+      - name: Publish backstage-plugin-librechat-backend
+        working-directory: plugins/librechat-backend
+        run: |
+          yarn pack -o package.tgz
+          npm publish package.tgz --access public
