@@ -1,4 +1,3 @@
-import React from "react";
 import {createDevApp} from "@backstage/frontend-dev-utils";
 import {
   createFrontendPlugin,

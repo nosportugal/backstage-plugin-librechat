@@ -114,6 +114,25 @@ export function ChatMessage({
   const isUser = message.role === "user";
   const showTyping = !isUser && loading && !message.content;
 
+  let bubbleContent: React.ReactNode;
+  if (isUser) {
+    bubbleContent = <Typography variant="body2">{message.content}</Typography>;
+  } else if (showTyping) {
+    bubbleContent = (
+      <div className={classes.typing} aria-label={`${agentName} is typing`}>
+        <span className={classes.dot} />
+        <span className={`${classes.dot} ${classes.dot2}`} />
+        <span className={`${classes.dot} ${classes.dot3}`} />
+      </div>
+    );
+  } else {
+    bubbleContent = (
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {message.content}
+      </ReactMarkdown>
+    );
+  }
+
   return (
     <div
       className={`${classes.root} ${
@@ -128,19 +147,7 @@ export function ChatMessage({
           isUser ? classes.userBubble : classes.assistantBubble
         }`}
       >
-        {isUser ? (
-          <Typography variant="body2">{message.content}</Typography>
-        ) : showTyping ? (
-          <div className={classes.typing} aria-label={`${agentName} is typing`}>
-            <span className={classes.dot} />
-            <span className={`${classes.dot} ${classes.dot2}`} />
-            <span className={`${classes.dot} ${classes.dot3}`} />
-          </div>
-        ) : (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message.content}
-          </ReactMarkdown>
-        )}
+        {bubbleContent}
       </div>
     </div>
   );

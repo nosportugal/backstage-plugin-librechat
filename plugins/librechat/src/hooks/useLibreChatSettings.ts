@@ -16,13 +16,16 @@ export function useLibreChatSettings() {
     apiKey: "",
   });
 
-  const safeGet = (key: string): string => {
-    try {
-      return bucket.snapshot<string>(key).value ?? "";
-    } catch {
-      return "";
-    }
-  };
+  const safeGet = useCallback(
+    (key: string): string => {
+      try {
+        return bucket.snapshot<string>(key).value ?? "";
+      } catch {
+        return "";
+      }
+    },
+    [bucket],
+  );
 
   // Load settings on mount
   useEffect(() => {
@@ -38,7 +41,7 @@ export function useLibreChatSettings() {
     return () => {
       sub.unsubscribe();
     };
-  }, [bucket]);
+  }, [bucket, safeGet]);
 
   const saveSettings = useCallback(
     async (newSettings: LibreChatSettings) => {
