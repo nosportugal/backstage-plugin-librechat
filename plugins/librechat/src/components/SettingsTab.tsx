@@ -2,20 +2,20 @@ import React, {useState, useEffect} from "react";
 import {makeStyles, Theme} from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
+import ButtonGroup from "@material-ui/core/ButtonGroup";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
-import CircularProgress from "@material-ui/core/CircularProgress";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-import CheckIcon from "@material-ui/icons/Check";
-import {useApi} from "@backstage/frontend-plugin-api";
-import {libreChatApiRef} from "../api";
-import {useLibreChatSettings} from "../hooks/useLibreChatSettings";
+import SaveIcon from "@material-ui/icons/Save";
+import DeleteIcon from "@material-ui/icons/Delete";
+import {useLibreChatSettings, ChatSize} from "../hooks/useLibreChatSettings";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
     display: "flex",
     flexDirection: "column",
     height: "100%",
+    position: "relative",
   },
   header: {
     display: "flex",
@@ -50,62 +50,77 @@ const useStyles = makeStyles((theme: Theme) => ({
   apiKeyField: {
     flex: 1,
   },
-  testButton: {
-    marginTop: 2,
-    minWidth: 40,
-    width: 40,
-    height: 40,
-    padding: 0,
+  sizeGroup: {
+    alignSelf: "flex-start",
+  },
+  fieldLabel: {
+    fontSize: "0.85rem",
+    fontWeight: 600,
+    marginBottom: theme.spacing(0.5),
   },
   actions: {
+    position: "absolute",
+    bottom: theme.spacing(2),
+    right: theme.spacing(2),
     display: "flex",
     gap: theme.spacing(1),
-    marginTop: theme.spacing(1),
+    zIndex: 1,
+  },
+  actionButton: {
+    background: theme.palette.background.paper,
+    boxShadow: theme.shadows[3],
+    "&:hover": {
+      background: theme.palette.action.hover,
+    },
+  },
+  saveButton: {
+    color: theme.palette.primary.main,
+  },
+  clearButton: {
+    color: theme.palette.error.main,
   },
   success: {
+    position: "absolute",
+    bottom: theme.spacing(3),
+    left: theme.spacing(2),
     color: theme.palette.success?.main ?? "#4caf50",
     fontSize: "0.85rem",
-    marginTop: theme.spacing(1),
+    zIndex: 1,
   },
 }));
 
 interface SettingsTabProps {
   onBack: () => void;
-  onCheckResult?: (reply: string, error?: string) => void;
 }
 
-export function SettingsTab({onBack, onCheckResult}: SettingsTabProps) {
+const CHAT_SIZE_OPTIONS: {value: ChatSize; label: string}[] = [
+  {value: "small", label: "Small"},
+  {value: "medium", label: "Medium"},
+  {value: "large", label: "Large"},
+];
+
+export function SettingsTab({onBack}: SettingsTabProps) {
   const classes = useStyles();
-  const libreChatApi = useApi(libreChatApiRef);
   const {settings, saveSettings, clearSettings} = useLibreChatSettings();
 
   const [apiKey, setApiKey] = useState(settings.apiKey);
+  const [chatSize, setChatSize] = useState<ChatSize>(settings.chatSize);
   const [saved, setSaved] = useState(false);
-  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     setApiKey(settings.apiKey);
+    setChatSize(settings.chatSize);
   }, [settings]);
 
-  const handleTest = async () => {
-    if (!apiKey.trim()) return;
-
-    setTesting(true);
-    try {
-      const reply = await libreChatApi.checkApiKey(apiKey.trim());
-      onCheckResult?.(reply);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Connection failed";
-      onCheckResult?.("", message);
-    } finally {
-      setTesting(false);
-    }
-  };
-
   const handleSave = async () => {
-    await saveSettings({apiKey});
+    await saveSettings({apiKey, chatSize});
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSizeChange = async (size: ChatSize) => {
+    setChatSize(size);
+    await saveSettings({apiKey, chatSize: size});
   };
 
   const handleClear = async () => {
@@ -126,8 +141,7 @@ export function SettingsTab({onBack, onCheckResult}: SettingsTabProps) {
 
       <div className={classes.content}>
         <Typography className={classes.description}>
-          Enter your LibreChat API key. Leave blank to use the default key set
-          by your Backstage administrator.
+          Enter your Librechat key.
         </Typography>
 
         <div className={classes.apiKeyRow}>
@@ -142,31 +156,47 @@ export function SettingsTab({onBack, onCheckResult}: SettingsTabProps) {
             placeholder="Your LibreChat API key"
             helperText="Overrides the server-configured API key"
           />
-          <Button
-            className={classes.testButton}
-            variant="outlined"
-            color="primary"
+        </div>
+
+        <div>
+          <Typography className={classes.fieldLabel}>Chat size</Typography>
+          <ButtonGroup
+            className={classes.sizeGroup}
             size="small"
-            disabled={!apiKey.trim() || testing}
-            onClick={handleTest}
-            title="Check API key — sends a test message"
+            color="primary"
+            aria-label="Chat window size"
           >
-            {testing ? <CircularProgress size={20} /> : <CheckIcon />}
-          </Button>
+            {CHAT_SIZE_OPTIONS.map((option) => (
+              <Button
+                key={option.value}
+                variant={chatSize === option.value ? "contained" : "outlined"}
+                onClick={() => handleSizeChange(option.value)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </ButtonGroup>
         </div>
 
         <div className={classes.actions}>
-          <Button
-            variant="contained"
-            color="primary"
+          <IconButton
+            className={`${classes.actionButton} ${classes.saveButton}`}
             size="small"
             onClick={handleSave}
+            title="Save settings"
+            aria-label="Save settings"
           >
-            Save
-          </Button>
-          <Button variant="outlined" size="small" onClick={handleClear}>
-            Clear
-          </Button>
+            <SaveIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            className={`${classes.actionButton} ${classes.clearButton}`}
+            size="small"
+            onClick={handleClear}
+            title="Clear settings"
+            aria-label="Clear settings"
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
         </div>
 
         {saved && (
