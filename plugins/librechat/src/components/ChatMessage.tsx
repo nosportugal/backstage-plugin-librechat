@@ -1,4 +1,4 @@
-import React from "react";
+import {ReactNode} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {makeStyles, Theme} from "@material-ui/core/styles";
@@ -114,7 +114,7 @@ export function ChatMessage({
   const isUser = message.role === "user";
   const showTyping = !isUser && loading && !message.content;
 
-  let bubbleContent: React.ReactNode;
+  let bubbleContent: ReactNode;
   if (isUser) {
     bubbleContent = <Typography variant="body2">{message.content}</Typography>;
   } else if (showTyping) {
