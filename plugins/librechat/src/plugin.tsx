@@ -1,4 +1,3 @@
-import React from "react";
 import {
   createFrontendPlugin,
   ApiBlueprint,
@@ -13,7 +12,7 @@ import {ChatBubble} from "./components/ChatBubble";
 /** Utility API extension providing the LibreChat API client. */
 const libreChatApi = ApiBlueprint.make({
   name: "librechat",
-  params: defineParams =>
+  params: (defineParams) =>
     defineParams(
       createApiFactory({
         api: libreChatApiRef,

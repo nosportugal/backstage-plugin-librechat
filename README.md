@@ -37,20 +37,6 @@ Ask questions about the page you're viewing, get contextual answers, and chat wi
 
 ---
 
-## 🏗️ Architecture
-
-```
-User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreChat Agents API (stream)
-```
-
-| Layer               | Responsibility                                                         |
-| ------------------- | ---------------------------------------------------------------------- |
-| **Frontend Plugin** | Chat bubble UI, page context capture, settings, API client             |
-| **Backend Plugin**  | Proxies streaming requests to LibreChat, manages API keys and agent ID |
-| **LibreChat Agent** | AI agent configured in LibreChat — referenced by `agentId` in config   |
-
----
-
 ## 📦 Packages
 
 | Package                                     | Description                                               |
@@ -60,84 +46,12 @@ User ↔ ChatBubble (frontend) → POST /api/librechat/chat (backend) → LibreC
 
 ---
 
-## 📋 Prerequisites
+## 🚀 Getting Started
 
-Before you begin, make sure you have:
+Installation and configuration instructions live in each plugin's README:
 
-- **[Node.js](https://nodejs.org/)** v24 or later
-- **[Yarn](https://yarnpkg.com/)** v4+
-- A **[Backstage](https://backstage.io/)** instance
-- A running **[LibreChat](https://www.librechat.ai/)** instance with the Agents API enabled
-
----
-
-## 🚀 Quick Start
-
-### 1 · Install the plugins
-
-```bash
-# Frontend
-yarn add @nospt/backstage-plugin-librechat
-
-# Backend
-yarn add @nospt/backstage-plugin-librechat-backend
-```
-
-### 2 · Register the backend plugin
-
-```typescript
-// packages/backend/src/index.ts
-import libreChatBackend from "@nospt/backstage-plugin-librechat-backend";
-
-const backend = createBackend();
-backend.add(libreChatBackend);
-```
-
-### 3 · Configure `app-config.yaml`
-
-```yaml
-librechat:
-  # Required: URL of your LibreChat instance
-  baseUrl: https://your-librechat-instance.com
-  # Required: Agent ID for chat completions
-  agentId: agent_abc123
-  # Optional: Display name for the chat agent (default: "AI")
-  name: NOS-GPT
-  # Optional: Default API key (users can override in Settings)
-  apiKey: your-librechat-api-key
-```
-
-| Setting   | Required | Description                                                      |
-| --------- | -------- | ---------------------------------------------------------------- |
-| `baseUrl` | ✅       | URL of your LibreChat instance                                   |
-| `agentId` | ✅       | Agent ID configured in LibreChat                                 |
-| `name`    | ❌       | Display name shown in chat header and messages (default: `"AI"`) |
-| `apiKey`  | ❌       | Default API key (users can override)                             |
-| `enabled` | ❌       | Enable/disable the chat bubble (default: `true`)                 |
-
-### 4 · Use it
-
-1. Open any page in Backstage
-2. Click the **💬 chat bubble** in the bottom-right corner
-3. Open **⚙️ Settings** to enter your API key (or use the default)
-4. Click the **✓ check** button to validate your key — a confirmation bubble appears in the chat
-5. Start chatting — the AI automatically receives context about the page you're viewing
-
----
-
-## 🔧 User Settings
-
-Users manage only their **API key**:
-
-1. Click the chat bubble → ⚙️ Settings
-2. Enter your LibreChat API key
-3. Click **✓** to test — if valid, a confirmation message appears in the chat
-4. Click **Save**
-
-Settings are stored in the user's browser via Backstage's Storage API.
-
-> [!NOTE]
-> The **Agent ID** is configured centrally in `app-config.yaml` by the Backstage administrator and applies to all users.
+- **[Frontend plugin →](plugins/librechat/README.md)** — chat bubble, settings, streaming client
+- **[Backend plugin →](plugins/librechat-backend/README.md)** — proxies requests to LibreChat
 
 ---
 
@@ -195,18 +109,6 @@ yarn start           # Frontend dev server (port 3000)
 yarn start:backend   # Backend dev server (port 7007)
 ```
 
-### Available Scripts
-
-| Script               | Description                     |
-| -------------------- | ------------------------------- |
-| `yarn start`         | Start the frontend dev server   |
-| `yarn start:backend` | Start the backend dev server    |
-| `yarn start:dev`     | Start both frontend and backend |
-| `yarn build`         | Build all packages              |
-| `yarn tsc`           | Type-check all packages         |
-| `yarn lint`          | Lint all packages               |
-| `yarn clean`         | Clean build artifacts           |
-
 ---
 
 ## 🛡️ Security
@@ -217,12 +119,6 @@ yarn start:backend   # Backend dev server (port 7007)
 | **Backend proxy**    | All LibreChat requests go through the backend — API keys never exposed to the browser                                            |
 | **Input validation** | Messages validated for role, length, and format before proxying                                                                  |
 | **Agent ID**         | Sanitized with strict alphanumeric pattern; configured server-side only                                                          |
-
----
-
-## 📄 License
-
-This project is licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
