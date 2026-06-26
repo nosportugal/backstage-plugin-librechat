@@ -1,14 +1,65 @@
 import {useState, useEffect} from "react";
+import type {ReactNode} from "react";
 import {makeStyles, Theme} from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
+import Link from "@material-ui/core/Link";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import SaveIcon from "@material-ui/icons/Save";
 import DeleteIcon from "@material-ui/icons/Delete";
+import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {useLibreChatSettings, ChatSize} from "../hooks/useLibreChatSettings";
+
+const DEFAULT_API_KEY_DESCRIPTION = "Enter your Librechat key.";
+
+/** Matches Markdown-style links: [label](url). */
+const LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+/** Only allow safe URL schemes to avoid e.g. javascript: injection. */
+function isSafeUrl(url: string): boolean {
+  return /^(https?:\/\/|mailto:)/i.test(url.trim());
+}
+
+/**
+ * Render text that may contain Markdown-style links into React nodes.
+ * Unsafe or malformed links fall back to plain text.
+ */
+function renderDescription(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+  LINK_PATTERN.lastIndex = 0;
+  let match = LINK_PATTERN.exec(text);
+  while (match !== null) {
+    const [full, label, url] = match;
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+    if (isSafeUrl(url)) {
+      nodes.push(
+        <Link
+          key={key++}
+          href={url.trim()}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {label}
+        </Link>,
+      );
+    } else {
+      nodes.push(label);
+    }
+    lastIndex = match.index + full.length;
+    match = LINK_PATTERN.exec(text);
+  }
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+  return nodes;
+}
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -101,7 +152,12 @@ const CHAT_SIZE_OPTIONS: {value: ChatSize; label: string}[] = [
 
 export function SettingsTab({onBack}: SettingsTabProps) {
   const classes = useStyles();
+  const configApi = useApi(configApiRef);
   const {settings, saveSettings, clearSettings} = useLibreChatSettings();
+
+  const apiKeyDescription =
+    configApi.getOptionalString("librechat.apiKeyDescription") ??
+    DEFAULT_API_KEY_DESCRIPTION;
 
   const [apiKey, setApiKey] = useState(settings.apiKey);
   const [chatSize, setChatSize] = useState<ChatSize>(settings.chatSize);
@@ -141,7 +197,7 @@ export function SettingsTab({onBack}: SettingsTabProps) {
 
       <div className={classes.content}>
         <Typography className={classes.description}>
-          Enter your Librechat key.
+          {renderDescription(apiKeyDescription)}
         </Typography>
 
         <div className={classes.apiKeyRow}>
