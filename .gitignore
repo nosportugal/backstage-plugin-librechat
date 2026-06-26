@@ -11,6 +11,12 @@ dist-types/
 # Test
 coverage/
 
+# Playwright
+/e2e/test-results/
+/playwright-report/
+/blob-report/
+/test-results/
+
 # Yarn (Berry / v4)
 .yarn/*
 !.yarn/patches
