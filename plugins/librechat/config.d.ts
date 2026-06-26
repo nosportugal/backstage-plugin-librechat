@@ -27,5 +27,17 @@ export interface Config {
      * @visibility frontend
      */
     apiKeyDescription?: string;
+
+    /**
+     * Path to a local image (e.g. a PNG) used as the chat bubble icon.
+     *
+     * The image must be served from your app's static assets: place the file
+     * in `packages/app/public` and set this to the served path, e.g.
+     * "/chat-icon.png". Resolved relative to `app.baseUrl`. Absolute URLs and
+     * `data:` URIs are also accepted. Falls back to the default chat icon when
+     * not set.
+     * @visibility frontend
+     */
+    iconPath?: string;
   };
 }

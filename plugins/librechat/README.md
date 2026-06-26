@@ -60,6 +60,8 @@ librechat:
   apiKey: your-librechat-api-key
   # Optional: display name shown in the chat header and message labels (default: "AI")
   name: NOS-GPT
+  # Optional: custom chat bubble icon from a local image in your app's static assets (served path, relative to app.baseUrl)
+  iconPath: /chat-icon.png
   # Optional: help text above the API key field in Settings (supports [label](url) links)
   apiKeyDescription: "You can set up your LibreChat key [here](https://example.com/key)."
   # Optional: show/hide the chat bubble (default: true)
@@ -72,6 +74,7 @@ librechat:
 | `agentId`           | ✅       | backend    | Agent ID configured in LibreChat, used as the completion model      |
 | `apiKey`            | ❌       | secret     | Default API key; users can override it per-request from the chat UI |
 | `name`              | ❌       | frontend   | Display name in the chat header and messages (default: `AI`)        |
+| `iconPath`          | ❌       | frontend   | Custom bubble icon from a local image in static assets (e.g. `/chat-icon.png`, resolved against `app.baseUrl`) |
 | `apiKeyDescription` | ❌       | frontend   | Help text above the API key field in Settings; supports `[label](url)` links |
 | `enabled`           | ❌       | frontend   | Show or hide the chat bubble (default: `true`)                      |
 
