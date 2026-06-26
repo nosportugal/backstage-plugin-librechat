@@ -110,7 +110,7 @@ export function useLibreChatSettings() {
   }, [bucket, safeGet]);
 
   const saveSettings = useCallback(
-    async (newSettings: LibreChatSettings) => {
+    async (newSettings: Pick<LibreChatSettings, "apiKey" | "chatSize">) => {
       if (newSettings.apiKey) {
         await bucket.set(API_KEY_KEY, newSettings.apiKey);
       } else {

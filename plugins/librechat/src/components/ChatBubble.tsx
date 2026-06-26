@@ -38,9 +38,34 @@ const useStyles = makeStyles((theme: Theme) => ({
     touchAction: "none",
     userSelect: "none",
     WebkitUserDrag: "none",
+    overflow: "hidden",
     "&:active": {
       cursor: "grabbing",
     },
+  },
+  // Applied when a custom icon image is used: strip the FAB's background and
+  // shadow so only the icon is visible.
+  fabImage: {
+    backgroundColor: "transparent",
+    boxShadow: "none",
+    "&:hover": {
+      backgroundColor: "transparent",
+      boxShadow: "none",
+    },
+  },
+  icon: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    display: "block",
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    // Let pointer events fall through to the button so dragging still works.
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserDrag: "none",
   },
   panel: {
     position: "fixed",
@@ -57,6 +82,23 @@ const useStyles = makeStyles((theme: Theme) => ({
 function useIsEnabled(): boolean {
   const configApi = useApi(configApiRef);
   return configApi.getOptionalBoolean("librechat.enabled") ?? true;
+}
+
+/** Optional custom image source for the bubble icon, resolved from config. */
+function useIconSrc(): string | undefined {
+  const configApi = useApi(configApiRef);
+  const iconPath = configApi.getOptionalString("librechat.iconPath");
+  if (!iconPath) {
+    return undefined;
+  }
+  // Already-absolute sources (http(s) or data URIs) are used as-is.
+  if (/^(https?:\/\/|data:)/i.test(iconPath)) {
+    return iconPath;
+  }
+  // Otherwise treat it as a path served from the app's static assets,
+  // resolved against the app base URL (e.g. "/chat-icon.png").
+  const baseUrl = configApi.getOptionalString("app.baseUrl") ?? "";
+  return `${baseUrl.replace(/\/+$/, "")}/${iconPath.replace(/^\/+/, "")}`;
 }
 
 /** Default resting position of the bubble: bottom-right corner. */
@@ -100,6 +142,7 @@ function computePanelStyle(
 export function ChatBubble() {
   const classes = useStyles();
   const enabled = useIsEnabled();
+  const iconSrc = useIconSrc();
   const signedIn = useIsSignedIn();
   const {settings, saveBubblePosition} = useLibreChatSettings();
   const [open, setOpen] = useState(false);
@@ -217,6 +260,16 @@ export function ChatBubble() {
   const bubbleCoords = position ?? defaultCoords();
   const panelStyle = computePanelStyle(bubbleCoords, dimensions);
 
+  let bubbleIcon = <ChatIcon />;
+  if (iconSrc) {
+    // Keep the custom icon in both states so toggling stays immersive.
+    bubbleIcon = (
+      <img src={iconSrc} alt="" className={classes.icon} draggable={false} />
+    );
+  } else if (open) {
+    bubbleIcon = <CloseIcon />;
+  }
+
   return (
     <ClickAwayListener onClickAway={() => setOpen(false)}>
       <div>
@@ -241,14 +294,14 @@ export function ChatBubble() {
         >
           <Fab
             color="primary"
-            className={classes.fab}
+            className={`${classes.fab}${iconSrc ? ` ${classes.fabImage}` : ""}`}
             onClick={handleClick}
             onPointerDown={handlePointerDown}
             onDragStart={(event) => event.preventDefault()}
             draggable={false}
             aria-label={open ? "Close chat" : "Open chat"}
           >
-            {open ? <CloseIcon /> : <ChatIcon />}
+            {bubbleIcon}
           </Fab>
         </div>
       </div>
