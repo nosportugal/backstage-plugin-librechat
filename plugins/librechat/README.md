@@ -68,15 +68,15 @@ librechat:
   enabled: true
 ```
 
-| Setting             | Required | Visibility | Description                                                         |
-| ------------------- | -------- | ---------- | ------------------------------------------------------------------- |
-| `baseUrl`           | ✅       | frontend   | URL of your LibreChat instance                                      |
-| `agentId`           | ✅       | backend    | Agent ID configured in LibreChat, used as the completion model      |
-| `apiKey`            | ❌       | secret     | Default API key; users can override it per-request from the chat UI |
-| `name`              | ❌       | frontend   | Display name in the chat header and messages (default: `AI`)        |
+| Setting             | Required | Visibility | Description                                                                                                    |
+| ------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
+| `baseUrl`           | ✅       | frontend   | URL of your LibreChat instance                                                                                 |
+| `agentId`           | ✅       | backend    | Agent ID configured in LibreChat, used as the completion model                                                 |
+| `apiKey`            | ❌       | secret     | Default API key; users can override it per-request from the chat UI                                            |
+| `name`              | ❌       | frontend   | Display name in the chat header and messages (default: `AI`)                                                   |
 | `iconPath`          | ❌       | frontend   | Custom bubble icon from a local image in static assets (e.g. `/chat-icon.png`, resolved against `app.baseUrl`) |
-| `apiKeyDescription` | ❌       | frontend   | Help text above the API key field in Settings; supports `[label](url)` links |
-| `enabled`           | ❌       | frontend   | Show or hide the chat bubble (default: `true`)                      |
+| `apiKeyDescription` | ❌       | frontend   | Help text above the API key field in Settings; supports `[label](url)` links                                   |
+| `enabled`           | ❌       | frontend   | Show or hide the chat bubble (default: `true`)                                                                 |
 
 > [!NOTE]
 > `agentId` and `apiKey` are only read server-side by the backend plugin and are never exposed to the browser. `baseUrl`, `name`, and `enabled` are visible to the frontend.
