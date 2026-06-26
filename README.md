@@ -24,17 +24,18 @@ Ask questions about the page you're viewing, get contextual answers, and chat wi
 
 ## ✨ Features
 
-| Feature                       | Description                                                               |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| 💬 **Floating Chat Bubble**   | Persistent AI chat overlay across all Backstage pages                     |
-| 📄 **Page Context Awareness** | Automatically sends the current page title, path, and URL to the agent    |
-| ⚡ **Streaming Responses**    | Real-time SSE streaming from the LibreChat Agents API                     |
-| 📝 **Markdown Rendering**     | Full GitHub Flavored Markdown support (code blocks, tables, lists)        |
-| 🔐 **Secure Backend Proxy**   | API keys stay server-side in `app-config.yaml`                            |
-| 🔑 **User API Key Override**  | Users can provide their own API key via in-chat settings                  |
+| Feature                       | Description                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| 💬 **Floating Chat Bubble**   | Persistent AI chat overlay across all Backstage pages                                       |
+| 📄 **Page Context Awareness** | Automatically sends the current page title, path, and URL to the agent                      |
+| ⚡ **Streaming Responses**    | Real-time SSE streaming from the LibreChat Agents API                                       |
+| 📝 **Markdown Rendering**     | Full GitHub Flavored Markdown support (code blocks, tables, lists)                          |
+| 🔐 **Secure Backend Proxy**   | API keys stay server-side in `app-config.yaml`                                              |
+| 🔑 **User API Key Override**  | Users can provide their own API key via in-chat settings                                    |
 | 🔗 **Configurable Help Text** | Customize the Settings API-key help text, including Markdown links, via `apiKeyDescription` |
-| ✅ **API Key Validation**     | Test your API key with a single click — response appears as a chat bubble |
-| ⚙️ **Configurable**           | Agent ID and base URL set centrally; users only manage their API key      |
+| 🖼️ **Custom Bubble Icon**     | Replace the default chat icon with your own local image via `iconPath`                      |
+| ✅ **API Key Validation**     | Test your API key with a single click — response appears as a chat bubble                   |
+| ⚙️ **Configurable**           | Agent ID and base URL set centrally; users only manage their API key                        |
 
 ---
 
