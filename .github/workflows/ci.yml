@@ -40,8 +40,8 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # push screenshots to the ci-screenshots branch
-      pull-requests: write # comment the screenshots on the PR
+      contents: read
+      pull-requests: write # comment the test results on the PR
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -68,13 +68,12 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report
-          path: |
-            playwright-report/
-            e2e/screenshots/
+          path: playwright-report/
           retention-days: 7
 
-      - name: Publish screenshots to PR comment
+      - name: Comment test results on PR
         if: >-
+          always() &&
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -85,85 +84,41 @@ jobs:
         run: |
           set -euo pipefail
 
-          SHOTS_DIR="e2e/screenshots"
-          if [ -z "$(ls -A "$SHOTS_DIR" 2>/dev/null || true)" ]; then
-            echo "No screenshots were produced; skipping comment."
+          REPORT="playwright-report/results.json"
+          if [ ! -f "$REPORT" ]; then
+            echo "No Playwright JSON report found; skipping comment."
             exit 0
           fi
 
-          BRANCH="ci-screenshots"
-          DEST="pr-${PR_NUMBER}"
+          PASSED="$(jq -r '.stats.expected // 0' "$REPORT")"
+          FAILED="$(jq -r '.stats.unexpected // 0' "$REPORT")"
+          FLAKY="$(jq -r '.stats.flaky // 0' "$REPORT")"
+          SKIPPED="$(jq -r '.stats.skipped // 0' "$REPORT")"
+          DURATION_MS="$(jq -r '.stats.duration // 0' "$REPORT")"
+          DURATION_S="$(awk "BEGIN { printf \"%.1f\", ${DURATION_MS}/1000 }")"
+          TOTAL=$((PASSED + FAILED + FLAKY + SKIPPED))
 
-          # Publish the screenshots on a dedicated branch through the GitHub Git
-          # Data API rather than a plain `git push`. Commits created via the API
-          # with the Actions token are signed by GitHub, satisfying the
-          # "verified signatures" repository rule. Raw URLs on that branch render
-          # inline in the PR comment.
-          BASE_COMMIT="$(gh api "repos/${REPO}/git/ref/heads/${BRANCH}" \
-            --jq '.object.sha' 2>/dev/null || true)"
-
-          # Upload each screenshot as a blob and collect the tree entries.
-          ITEMS="[]"
-          for f in "${SHOTS_DIR}"/*.png; do
-            name="$(basename "$f")"
-            content="$(base64 < "$f" | tr -d '\n')"
-            blob_sha="$(gh api -X POST "repos/${REPO}/git/blobs" \
-              -f content="$content" -f encoding="base64" --jq '.sha')"
-            ITEMS="$(jq -c \
-              --arg path "${DEST}/${name}" --arg sha "$blob_sha" \
-              '. + [{path:$path, mode:"100644", type:"blob", sha:$sha}]' \
-              <<<"$ITEMS")"
-          done
-
-          # Build a tree (preserving other PRs' folders when the branch exists).
-          if [ -n "$BASE_COMMIT" ]; then
-            BASE_TREE="$(gh api "repos/${REPO}/git/commits/${BASE_COMMIT}" \
-              --jq '.tree.sha')"
-            TREE_SHA="$(jq -n --argjson tree "$ITEMS" --arg base "$BASE_TREE" \
-              '{base_tree:$base, tree:$tree}' \
-              | gh api -X POST "repos/${REPO}/git/trees" --input - --jq '.sha')"
-            COMMIT_SHA="$(jq -n \
-              --arg msg "ci: screenshots for PR #${PR_NUMBER} (${HEAD_SHA})" \
-              --arg tree "$TREE_SHA" --arg parent "$BASE_COMMIT" \
-              '{message:$msg, tree:$tree, parents:[$parent]}' \
-              | gh api -X POST "repos/${REPO}/git/commits" --input - --jq '.sha')"
-            gh api -X PATCH "repos/${REPO}/git/refs/heads/${BRANCH}" \
-              -f sha="$COMMIT_SHA" -F force=true >/dev/null
+          if [ "$FAILED" -gt 0 ]; then
+            STATUS="❌ Failed"
           else
-            TREE_SHA="$(jq -n --argjson tree "$ITEMS" \
-              '{tree:$tree}' \
-              | gh api -X POST "repos/${REPO}/git/trees" --input - --jq '.sha')"
-            COMMIT_SHA="$(jq -n \
-              --arg msg "ci: screenshots for PR #${PR_NUMBER} (${HEAD_SHA})" \
-              --arg tree "$TREE_SHA" \
-              '{message:$msg, tree:$tree, parents:[]}' \
-              | gh api -X POST "repos/${REPO}/git/commits" --input - --jq '.sha')"
-            gh api -X POST "repos/${REPO}/git/refs" \
-              -f ref="refs/heads/${BRANCH}" -f sha="$COMMIT_SHA" >/dev/null
+            STATUS="✅ Passed"
           fi
 
-          # Build the comment body with one embedded image per screenshot.
           BODY="$(mktemp)"
           {
-            echo "<!-- e2e-screenshots -->"
-            echo "## 📸 E2E Screenshots"
+            echo "<!-- e2e-results -->"
+            echo "## 🎭 Playwright E2E Results"
             echo ""
-            echo "Captured from the latest run for commit \`${HEAD_SHA}\`."
+            echo "**${STATUS}** for commit \`${HEAD_SHA}\` — ${DURATION_S}s"
             echo ""
-            for f in "${SHOTS_DIR}"/*.png; do
-              name="$(basename "$f")"
-              title="${name%.png}"
-              url="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${DEST}/${name}"
-              echo "### ${title}"
-              echo ""
-              echo "![${title}](${url})"
-              echo ""
-            done
+            echo "| Passed | Failed | Flaky | Skipped | Total |"
+            echo "| ------ | ------ | ----- | ------- | ----- |"
+            echo "| ${PASSED} | ${FAILED} | ${FLAKY} | ${SKIPPED} | ${TOTAL} |"
           } > "$BODY"
 
-          # Upsert: edit the existing screenshots comment if present, else create.
+          # Upsert: edit the existing results comment if present, else create.
           CID="$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
-            --jq '.[] | select(.body | startswith("<!-- e2e-screenshots -->")) | .id' \
+            --jq '.[] | select(.body | startswith("<!-- e2e-results -->")) | .id' \
             | head -n1 || true)"
           if [ -n "${CID}" ]; then
             gh api -X PATCH "repos/${REPO}/issues/comments/${CID}" \
