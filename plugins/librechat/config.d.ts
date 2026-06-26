@@ -19,5 +19,13 @@ export interface Config {
      * @visibility frontend
      */
     name?: string;
+
+    /**
+     * Help text shown above the API key field in the chat Settings tab.
+     * Supports Markdown-style links, e.g.
+     * "Get your key [here](https://example.com/key).".
+     * @visibility frontend
+     */
+    apiKeyDescription?: string;
   };
 }
