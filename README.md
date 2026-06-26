@@ -32,6 +32,7 @@ Ask questions about the page you're viewing, get contextual answers, and chat wi
 | 📝 **Markdown Rendering**     | Full GitHub Flavored Markdown support (code blocks, tables, lists)        |
 | 🔐 **Secure Backend Proxy**   | API keys stay server-side in `app-config.yaml`                            |
 | 🔑 **User API Key Override**  | Users can provide their own API key via in-chat settings                  |
+| 🔗 **Configurable Help Text** | Customize the Settings API-key help text, including Markdown links, via `apiKeyDescription` |
 | ✅ **API Key Validation**     | Test your API key with a single click — response appears as a chat bubble |
 | ⚙️ **Configurable**           | Agent ID and base URL set centrally; users only manage their API key      |
 
