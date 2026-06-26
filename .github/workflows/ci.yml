@@ -94,32 +94,52 @@ jobs:
           BRANCH="ci-screenshots"
           DEST="pr-${PR_NUMBER}"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Publish the screenshots on a dedicated branch via a worktree so the
-          # checked-out PR code stays untouched. Raw URLs on that branch render
+          # Publish the screenshots on a dedicated branch through the GitHub Git
+          # Data API rather than a plain `git push`. Commits created via the API
+          # with the Actions token are signed by GitHub, satisfying the
+          # "verified signatures" repository rule. Raw URLs on that branch render
           # inline in the PR comment.
-          git fetch origin "$BRANCH" --depth=1 || true
-          if git show-ref --verify --quiet "refs/remotes/origin/${BRANCH}"; then
-            git worktree add /tmp/shots "origin/${BRANCH}"
-            git -C /tmp/shots checkout -B "$BRANCH"
-          else
-            git worktree add --detach /tmp/shots
-            git -C /tmp/shots checkout --orphan "$BRANCH"
-            git -C /tmp/shots rm -rf . >/dev/null 2>&1 || true
-          fi
+          BASE_COMMIT="$(gh api "repos/${REPO}/git/ref/heads/${BRANCH}" \
+            --jq '.object.sha' 2>/dev/null || true)"
 
-          rm -rf "/tmp/shots/${DEST}"
-          mkdir -p "/tmp/shots/${DEST}"
-          cp "${SHOTS_DIR}"/*.png "/tmp/shots/${DEST}/"
+          # Upload each screenshot as a blob and collect the tree entries.
+          ITEMS="[]"
+          for f in "${SHOTS_DIR}"/*.png; do
+            name="$(basename "$f")"
+            content="$(base64 < "$f" | tr -d '\n')"
+            blob_sha="$(gh api -X POST "repos/${REPO}/git/blobs" \
+              -f content="$content" -f encoding="base64" --jq '.sha')"
+            ITEMS="$(jq -c \
+              --arg path "${DEST}/${name}" --arg sha "$blob_sha" \
+              '. + [{path:$path, mode:"100644", type:"blob", sha:$sha}]' \
+              <<<"$ITEMS")"
+          done
 
-          git -C /tmp/shots add "${DEST}"
-          if git -C /tmp/shots diff --cached --quiet; then
-            echo "Screenshots unchanged; nothing to push."
+          # Build a tree (preserving other PRs' folders when the branch exists).
+          if [ -n "$BASE_COMMIT" ]; then
+            BASE_TREE="$(gh api "repos/${REPO}/git/commits/${BASE_COMMIT}" \
+              --jq '.tree.sha')"
+            TREE_SHA="$(jq -n --argjson tree "$ITEMS" --arg base "$BASE_TREE" \
+              '{base_tree:$base, tree:$tree}' \
+              | gh api -X POST "repos/${REPO}/git/trees" --input - --jq '.sha')"
+            COMMIT_SHA="$(jq -n \
+              --arg msg "ci: screenshots for PR #${PR_NUMBER} (${HEAD_SHA})" \
+              --arg tree "$TREE_SHA" --arg parent "$BASE_COMMIT" \
+              '{message:$msg, tree:$tree, parents:[$parent]}' \
+              | gh api -X POST "repos/${REPO}/git/commits" --input - --jq '.sha')"
+            gh api -X PATCH "repos/${REPO}/git/refs/heads/${BRANCH}" \
+              -f sha="$COMMIT_SHA" -F force=true >/dev/null
           else
-            git -C /tmp/shots commit -m "ci: screenshots for PR #${PR_NUMBER} (${HEAD_SHA})"
-            git -C /tmp/shots push -f origin "$BRANCH"
+            TREE_SHA="$(jq -n --argjson tree "$ITEMS" \
+              '{tree:$tree}' \
+              | gh api -X POST "repos/${REPO}/git/trees" --input - --jq '.sha')"
+            COMMIT_SHA="$(jq -n \
+              --arg msg "ci: screenshots for PR #${PR_NUMBER} (${HEAD_SHA})" \
+              --arg tree "$TREE_SHA" \
+              '{message:$msg, tree:$tree, parents:[]}' \
+              | gh api -X POST "repos/${REPO}/git/commits" --input - --jq '.sha')"
+            gh api -X POST "repos/${REPO}/git/refs" \
+              -f ref="refs/heads/${BRANCH}" -f sha="$COMMIT_SHA" >/dev/null
           fi
 
           # Build the comment body with one embedded image per screenshot.
