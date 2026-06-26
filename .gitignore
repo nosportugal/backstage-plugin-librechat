@@ -12,7 +12,6 @@ dist-types/
 coverage/
 
 # Playwright
-/e2e/screenshots/
 /e2e/test-results/
 /playwright-report/
 /blob-report/
