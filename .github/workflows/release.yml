@@ -28,6 +28,13 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Publishing version $VERSION (from tag $GITHUB_REF_NAME)"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --prefix plugins/librechat
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --prefix plugins/librechat-backend
+
       - name: Generate type declarations
         run: yarn tsc
 
