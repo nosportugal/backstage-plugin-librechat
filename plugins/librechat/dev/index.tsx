@@ -8,7 +8,6 @@ import {
 import {Link} from "@backstage/ui";
 import {RiGithubFill} from "@remixicon/react";
 import libreChatPlugin from "../src";
-import {ChatBubble} from "../src/components/ChatBubble";
 
 const REPO_URL = "https://github.com/nosportugal/backstage-plugin-librechat";
 
@@ -20,10 +19,11 @@ const devPage = PageBlueprint.make({
     path: "/",
     title: "LibreChat Plugin Dev",
     routeRef: devRouteRef,
+    // The chat bubble is mounted globally by the plugin itself
+    // (AppRootElementBlueprint), so it must not be rendered again here.
     loader: async () => (
       <div style={{padding: 32}}>
         <p>Look for the chat bubble in the bottom-right corner.</p>
-        <ChatBubble />
       </div>
     ),
   },
