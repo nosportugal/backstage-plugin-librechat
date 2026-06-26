@@ -17,6 +17,9 @@ librechat:
   enabled: true
   # Display name for the chat agent
   name: NOS-GPT
+  # Optional: help text shown above the API key field in Settings.
+  # Supports Markdown-style links, e.g. [label](https://example.com).
+  apiKeyDescription: "You can set up your LibreChat key [here](https://www.example.com/key)."
   # Required: URL of your LibreChat instance
   baseUrl: https://nos-gpt-staging.oizys.clg.nos.pt
   # Optional: Default API key (users can override in Settings)
