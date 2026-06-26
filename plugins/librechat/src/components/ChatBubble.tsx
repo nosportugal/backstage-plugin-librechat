@@ -141,7 +141,7 @@ function computePanelStyle(
 
 export function ChatBubble() {
   const classes = useStyles();
-  const enabled = useIsEnabled();
+  const configEnabled = useIsEnabled();
   const iconSrc = useIconSrc();
   const signedIn = useIsSignedIn();
   const {settings, saveBubblePosition} = useLibreChatSettings();
@@ -252,7 +252,9 @@ export function ChatBubble() {
     setOpen((prev) => !prev);
   }, []);
 
-  if (!enabled || !signedIn) {
+  // `configEnabled` is the admin gate; `settings.enabled` is the per-user
+  // preference (defaults to on). Both must allow it for the bubble to show.
+  if (!configEnabled || !settings.enabled || !signedIn) {
     return null;
   }
 
