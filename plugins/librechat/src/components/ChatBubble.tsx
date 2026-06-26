@@ -259,12 +259,13 @@ export function ChatBubble() {
   const panelStyle = computePanelStyle(bubbleCoords, dimensions);
 
   let bubbleIcon = <ChatIcon />;
-  if (open) {
-    bubbleIcon = <CloseIcon />;
-  } else if (iconSrc) {
+  if (iconSrc) {
+    // Keep the custom icon in both states so toggling stays immersive.
     bubbleIcon = (
       <img src={iconSrc} alt="" className={classes.icon} draggable={false} />
     );
+  } else if (open) {
+    bubbleIcon = <CloseIcon />;
   }
 
   return (
@@ -291,7 +292,7 @@ export function ChatBubble() {
         >
           <Fab
             color="primary"
-            className={`${classes.fab}${iconSrc && !open ? ` ${classes.fabImage}` : ""}`}
+            className={`${classes.fab}${iconSrc ? ` ${classes.fabImage}` : ""}`}
             onClick={handleClick}
             onPointerDown={handlePointerDown}
             onDragStart={(event) => event.preventDefault()}
