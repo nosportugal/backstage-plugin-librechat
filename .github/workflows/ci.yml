@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -38,3 +36,118 @@ jobs:
 
       - name: Build
         run: yarn build
+
+  e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push screenshots to the ci-screenshots branch
+      pull-requests: write # comment the screenshots on the PR
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Playwright browser
+        run: yarn e2e:install
+
+      - name: Run Playwright tests
+        run: yarn e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            e2e/screenshots/
+          retention-days: 7
+
+      - name: Publish screenshots to PR comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          SHOTS_DIR="e2e/screenshots"
+          if [ -z "$(ls -A "$SHOTS_DIR" 2>/dev/null || true)" ]; then
+            echo "No screenshots were produced; skipping comment."
+            exit 0
+          fi
+
+          BRANCH="ci-screenshots"
+          DEST="pr-${PR_NUMBER}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Publish the screenshots on a dedicated branch via a worktree so the
+          # checked-out PR code stays untouched. Raw URLs on that branch render
+          # inline in the PR comment.
+          git fetch origin "$BRANCH" --depth=1 || true
+          if git show-ref --verify --quiet "refs/remotes/origin/${BRANCH}"; then
+            git worktree add /tmp/shots "origin/${BRANCH}"
+            git -C /tmp/shots checkout -B "$BRANCH"
+          else
+            git worktree add --detach /tmp/shots
+            git -C /tmp/shots checkout --orphan "$BRANCH"
+            git -C /tmp/shots rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          rm -rf "/tmp/shots/${DEST}"
+          mkdir -p "/tmp/shots/${DEST}"
+          cp "${SHOTS_DIR}"/*.png "/tmp/shots/${DEST}/"
+
+          git -C /tmp/shots add "${DEST}"
+          if git -C /tmp/shots diff --cached --quiet; then
+            echo "Screenshots unchanged; nothing to push."
+          else
+            git -C /tmp/shots commit -m "ci: screenshots for PR #${PR_NUMBER} (${HEAD_SHA})"
+            git -C /tmp/shots push -f origin "$BRANCH"
+          fi
+
+          # Build the comment body with one embedded image per screenshot.
+          BODY="$(mktemp)"
+          {
+            echo "<!-- e2e-screenshots -->"
+            echo "## 📸 E2E Screenshots"
+            echo ""
+            echo "Captured from the latest run for commit \`${HEAD_SHA}\`."
+            echo ""
+            for f in "${SHOTS_DIR}"/*.png; do
+              name="$(basename "$f")"
+              title="${name%.png}"
+              url="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${DEST}/${name}"
+              echo "### ${title}"
+              echo ""
+              echo "![${title}](${url})"
+              echo ""
+            done
+          } > "$BODY"
+
+          # Upsert: edit the existing screenshots comment if present, else create.
+          CID="$(gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body | startswith("<!-- e2e-screenshots -->")) | .id' \
+            | head -n1 || true)"
+          if [ -n "${CID}" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${CID}" \
+              -f body="$(cat "$BODY")" >/dev/null
+          else
+            gh pr comment "$PR_NUMBER" --body-file "$BODY" >/dev/null
+          fi
