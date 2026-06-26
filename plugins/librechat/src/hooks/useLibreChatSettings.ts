@@ -5,6 +5,7 @@ const STORAGE_BUCKET = "librechat-settings";
 const API_KEY_KEY = "apiKey";
 const CHAT_SIZE_KEY = "chatSize";
 const BUBBLE_POSITION_KEY = "bubblePosition";
+const ENABLED_KEY = "enabled";
 
 /** Available chat window sizes a user can choose from. */
 export type ChatSize = "small" | "medium" | "large";
@@ -50,6 +51,8 @@ export interface LibreChatSettings {
   apiKey: string;
   chatSize: ChatSize;
   bubblePosition: BubblePosition;
+  /** Per-user toggle controlling whether the chat bubble is shown. */
+  enabled: boolean;
 }
 
 export function useLibreChatSettings() {
@@ -60,6 +63,7 @@ export function useLibreChatSettings() {
     apiKey: "",
     chatSize: DEFAULT_CHAT_SIZE,
     bubblePosition: null,
+    enabled: true,
   });
 
   const safeGet = useCallback(
@@ -73,12 +77,22 @@ export function useLibreChatSettings() {
     [bucket],
   );
 
+  // The enabled flag defaults to true so the bubble is opt-out, not opt-in.
+  const safeGetEnabled = useCallback((): boolean => {
+    try {
+      return bucket.snapshot<boolean>(ENABLED_KEY).value ?? true;
+    } catch {
+      return true;
+    }
+  }, [bucket]);
+
   // Load settings on mount
   useEffect(() => {
     setSettings({
       apiKey: safeGet(API_KEY_KEY),
       chatSize: normalizeChatSize(safeGet(CHAT_SIZE_KEY)),
       bubblePosition: normalizeBubblePosition(safeGet(BUBBLE_POSITION_KEY)),
+      enabled: safeGetEnabled(),
     });
 
     // Subscribe to changes
@@ -101,13 +115,22 @@ export function useLibreChatSettings() {
           bubblePosition: normalizeBubblePosition(next.value ?? ""),
         }));
       });
+    const enabledSub = bucket
+      .observe$<boolean>(ENABLED_KEY)
+      .subscribe((next) => {
+        setSettings((prev) => ({
+          ...prev,
+          enabled: next.value ?? true,
+        }));
+      });
 
     return () => {
       apiKeySub.unsubscribe();
       chatSizeSub.unsubscribe();
       bubblePositionSub.unsubscribe();
+      enabledSub.unsubscribe();
     };
-  }, [bucket, safeGet]);
+  }, [bucket, safeGet, safeGetEnabled]);
 
   const saveSettings = useCallback(
     async (newSettings: Pick<LibreChatSettings, "apiKey" | "chatSize">) => {
@@ -136,5 +159,18 @@ export function useLibreChatSettings() {
     [bucket],
   );
 
-  return {settings, saveSettings, clearSettings, saveBubblePosition};
+  const saveEnabled = useCallback(
+    async (enabled: boolean) => {
+      await bucket.set(ENABLED_KEY, enabled);
+    },
+    [bucket],
+  );
+
+  return {
+    settings,
+    saveSettings,
+    clearSettings,
+    saveBubblePosition,
+    saveEnabled,
+  };
 }
