@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "outDir": "../../dist-types/plugins/librechat-backend",
+    "declarationDir": "../../dist-types/plugins/librechat-backend",
+    "rootDir": "."
+  }
+}

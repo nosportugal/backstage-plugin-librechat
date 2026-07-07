@@ -1,0 +1,33 @@
+app:
+  title: LibreChat Plugin Dev
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+
+# LibreChat plugin configuration
+librechat:
+  # Enable the chat bubble without needing the feature flag
+  enabled: true
+  # Display name for the chat agent
+  name: NOS-GPT
+  # Optional: custom chat bubble icon from a local image.
+  # Place the file in your app's static assets (packages/app/public, or
+  # plugins/librechat/public in this dev app) and set the served path here.
+  # Resolved relative to app.baseUrl. Falls back to the default chat icon.
+  iconPath: /icon.png
+  # Optional: help text shown above the API key field in Settings.
+  # Supports Markdown-style links, e.g. [label](https://example.com).
+  apiKeyDescription: "You can set up your LibreChat key [here](https://www.example.com/key)."
+  # Required: URL of your LibreChat instance
+  baseUrl: https://your-librechat.example.com
+  # Optional: Default API key (users can override in Settings)
+  # apiKey: your-librechat-api-key
+  # Required: Agent ID for chat completions
+  agentId: agent_YOUR_AGENT_ID_HERE

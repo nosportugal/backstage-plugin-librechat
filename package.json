@@ -1,0 +1,47 @@
+{
+  "name": "root",
+  "version": "0.3.0",
+  "private": true,
+  "workspaces": [
+    "plugins/*"
+  ],
+  "scripts": {
+    "start": "yarn workspace @nospt/backstage-plugin-librechat start",
+    "start:backend": "yarn workspace @nospt/backstage-plugin-librechat-backend start",
+    "start:dev": "yarn start:backend & yarn start",
+    "build": "yarn workspaces foreach -A run build",
+    "tsc": "yarn workspaces foreach -A run tsc",
+    "lint": "yarn workspaces foreach -A run lint",
+    "test": "yarn workspaces foreach -A run test",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install --with-deps chromium",
+    "clean": "yarn workspaces foreach -A run clean"
+  },
+  "devDependencies": {
+    "@backstage/cli": "^0.36.0",
+    "@backstage/cli-defaults": "^0.1.0",
+    "@playwright/test": "^1.49.0"
+  },
+  "resolutions": {
+    "ws": "8.21.0",
+    "undici@npm:^5.28.2": "6.27.0",
+    "undici@npm:^7.24.5": "7.28.0",
+    "form-data@npm:^4.0.4": "4.0.6",
+    "form-data@npm:^4.0.5": "4.0.6",
+    "koa": "3.1.2",
+    "react-router": "6.30.4",
+    "qs": "6.15.3",
+    "prismjs": "1.30.0",
+    "fast-xml-parser": "5.7.3",
+    "ip-address": "10.2.0",
+    "brace-expansion@npm:^5.0.5": "5.0.6",
+    "js-cookie": "3.0.8",
+    "uuid@npm:^11.0.0": "11.1.1",
+    "@octokit/request@npm:^8.0.0": "8.4.1",
+    "esbuild@npm:^0.27.1": "0.28.1"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "yarn@4.0.0"
+}
