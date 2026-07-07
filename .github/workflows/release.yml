@@ -28,12 +28,25 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Set version from tag
+      - name: Validate package versions match tag
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "Publishing version $VERSION (from tag $GITHUB_REF_NAME)"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version --prefix plugins/librechat
-          npm version "$VERSION" --no-git-tag-version --allow-same-version --prefix plugins/librechat-backend
+          VERSION="${GITHUB_REF_NAME}"
+          FRONTEND_VERSION="$(node -p "require('./plugins/librechat/package.json').version")"
+          BACKEND_VERSION="$(node -p "require('./plugins/librechat-backend/package.json').version")"
+
+          echo "Tag version: $VERSION"
+          echo "Frontend package version: $FRONTEND_VERSION"
+          echo "Backend package version: $BACKEND_VERSION"
+
+          if [ "$FRONTEND_VERSION" != "$BACKEND_VERSION" ]; then
+            echo "Error: package versions do not match"
+            exit 1
+          fi
+
+          if [ "$VERSION" != "$FRONTEND_VERSION" ]; then
+            echo "Error: tag $VERSION does not match package version $FRONTEND_VERSION"
+            exit 1
+          fi
 
       - name: Generate type declarations
         run: yarn tsc
