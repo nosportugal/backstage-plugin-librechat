@@ -31,3 +31,6 @@ librechat:
   # apiKey: your-librechat-api-key
   # Required: Agent ID for chat completions
   agentId: agent_YOUR_AGENT_ID_HERE
+  # Optional: allow anonymous access to /api/librechat/* (default: false)
+  # Set to true only for trusted/dev environments.
+  allowUnauthenticated: false

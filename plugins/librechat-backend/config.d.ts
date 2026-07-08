@@ -30,5 +30,15 @@ export interface Config {
      * @visibility backend
      */
     agentId: string;
+
+    /**
+     * Allows unauthenticated access to backend endpoints.
+     *
+     * Defaults to false (recommended). Enable only when your Backstage
+     * instance itself is already restricted and you explicitly want this
+     * plugin route to be public.
+     * @visibility backend
+     */
+    allowUnauthenticated?: boolean;
   };
 }
