@@ -6,6 +6,8 @@ This is the **backend** half of the LibreChat plugin. It exposes an HTTP route t
 
 It must be paired with the frontend plugin, [`@nospt/backstage-plugin-librechat`](../librechat/README.md), which renders the chat bubble UI **and holds the full configuration reference**.
 
+By default, backend routes require Backstage authentication. If you explicitly need public access (for example, local demos), set `librechat.allowUnauthenticated: true`.
+
 ## Installation
 
 Install the package in your Backstage backend package:
