@@ -2,6 +2,10 @@
   "name": "@nospt/backstage-plugin-librechat",
   "version": "0.4.0",
   "description": "Backstage frontend plugin adding an AI chat bubble powered by LibreChat Agents API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nosportugal/backstage-plugin-librechat"
+  },
   "main": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "license": "Apache-2.0",
