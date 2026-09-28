@@ -1,6 +1,6 @@
 {
   "name": "@nospt/backstage-plugin-librechat-backend",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Backend plugin for Backstage that proxies requests to LibreChat Agents API",
   "repository": {
     "type": "git",
