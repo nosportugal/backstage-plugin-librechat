@@ -47,6 +47,35 @@ export const libreChatApiRef = createApiRef<LibreChatApi>({
 });
 
 /**
+ * Extracts a human-readable message from a Backstage backend error body.
+ * Backstage errors use {error: {name, message}, ...}; the plugin's own
+ * router uses {error: "..."} or {error: "...", details: "..."}.
+ */
+function extractErrorMessage(errorBody: unknown, status: number): string {
+  if (typeof errorBody !== "object" || errorBody === null) {
+    return `Backend returned ${status}`;
+  }
+  const body = errorBody as {
+    error?: unknown;
+    details?: unknown;
+  };
+  if (typeof body.error === "string") {
+    return body.error;
+  }
+  if (
+    typeof body.error === "object" &&
+    body.error !== null &&
+    typeof (body.error as {message?: unknown}).message === "string"
+  ) {
+    return (body.error as {message: string}).message;
+  }
+  if (typeof body.details === "string") {
+    return body.details;
+  }
+  return `Backend returned ${status}`;
+}
+
+/**
  * Default implementation of the LibreChat API.
  * Calls the backend proxy and parses the SSE stream.
  *
@@ -79,10 +108,7 @@ export class DefaultLibreChatApi implements LibreChatApi {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(
-        (data as {error?: string}).error ??
-          `Backend returned ${response.status}`,
-      );
+      throw new Error(extractErrorMessage(data, response.status));
     }
 
     const data = (await response.json()) as {ok: boolean; reply: string};
@@ -107,10 +133,7 @@ export class DefaultLibreChatApi implements LibreChatApi {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw new Error(
-        (errorBody as {error?: string}).error ??
-          `Backend returned ${response.status}`,
-      );
+      throw new Error(extractErrorMessage(errorBody, response.status));
     }
 
     const reader = response.body?.getReader();

@@ -1,6 +1,6 @@
 {
   "name": "root",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "clean": "yarn workspaces foreach -A run clean"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.36.0",
+    "@backstage/cli": "^0.36.6",
     "@backstage/cli-defaults": "^0.1.0",
     "@playwright/test": "^1.49.0"
   },
@@ -42,7 +42,8 @@
     "js-cookie": "3.0.8",
     "uuid@npm:^11.0.0": "11.1.1",
     "@octokit/request@npm:^8.0.0": "8.4.1",
-    "esbuild@npm:^0.27.1": "0.28.1"
+    "esbuild@npm:^0.27.1": "0.28.1",
+    "@yarnpkg/core": "4.8.0"
   },
   "engines": {
     "node": ">=24.0.0"

@@ -13,6 +13,8 @@ It must be paired with the backend plugin, [`@nospt/backstage-plugin-librechat-b
 - **Streaming responses** — real-time SSE streaming from the LibreChat Agents API.
 - **Markdown rendering** — full GitHub Flavored Markdown (code blocks, tables, lists).
 - **In-chat settings** — users can supply their own API key, validate it, and override the default.
+- **Local conversation history** — completed conversations are saved per signed-in user in the browser via Backstage's Storage API; the five most recently used conversations are retained.
+- **History controls** — reopen the last active chat, start a new chat, switch conversations, delete individual conversations, or delete all local history.
 
 ## Prerequisites
 
@@ -116,6 +118,8 @@ The backend resolves the API key (a user-supplied header takes precedence over t
 5. Start chatting — the AI automatically receives context about the page you're viewing.
 
 User settings (the API key) are stored in the browser via Backstage's Storage API.
+
+Completed chat conversations are also stored locally per signed-in Backstage user. Only the five most recently used conversations are retained; no conversation data is sent to the plugin backend except the active transcript needed for the current request. Page context is attached to requests without being stored in the transcript.
 
 ## License
 
