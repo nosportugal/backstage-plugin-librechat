@@ -27,7 +27,15 @@ export const libreChatPlugin = createBackendPlugin({
         database: coreServices.database,
         discovery: coreServices.discovery,
       },
-      async init({logger, config, httpRouter, auth, httpAuth, database, discovery}) {
+      async init({
+        logger,
+        config,
+        httpRouter,
+        auth,
+        httpAuth,
+        database,
+        discovery,
+      }) {
         const baseUrl = config.getString("librechat.baseUrl");
         const allowUnauthenticated =
           config.getOptionalBoolean("librechat.allowUnauthenticated") ?? false;
@@ -39,7 +47,11 @@ export const libreChatPlugin = createBackendPlugin({
         );
 
         let oidcDeps:
-          | {tokenStore: OidcTokenStore; oidcClient: OidcClient; httpAuth: typeof httpAuth}
+          | {
+              tokenStore: OidcTokenStore;
+              oidcClient: OidcClient;
+              httpAuth: typeof httpAuth;
+            }
           | undefined;
 
         if (authConfig.method === "oidc") {

@@ -65,7 +65,13 @@ export class OidcTokenStore {
         updated_at: now,
       })
       .onConflict("user_entity_ref")
-      .merge(["refresh_token", "access_token", "access_token_expires_at", "user_label", "updated_at"]);
+      .merge([
+        "refresh_token",
+        "access_token",
+        "access_token_expires_at",
+        "user_label",
+        "updated_at",
+      ]);
   }
 
   /** Updates only the access token after a successful refresh. */

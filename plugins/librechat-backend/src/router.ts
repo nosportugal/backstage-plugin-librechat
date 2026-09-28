@@ -101,10 +101,7 @@ export function createRouter(options: RouterOptions): express.Router {
       });
       return undefined;
     }
-    const invalidReason = validateAccessTokenClaims(
-      session,
-      authConfig.oidc!,
-    );
+    const invalidReason = validateAccessTokenClaims(session, authConfig.oidc!);
     if (invalidReason) {
       logger.warn(
         `Stored OIDC token for ${userEntityRef} failed pre-flight validation: ${invalidReason}`,

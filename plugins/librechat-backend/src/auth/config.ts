@@ -31,8 +31,10 @@ const DEFAULT_SCOPES = ["openid", "profile", "email", "offline_access"];
 export function readAuthConfig(config: Config): LibreChatAuthConfig {
   const authConfig = config.getOptionalConfig("librechat.auth");
   const method =
-    (authConfig?.getOptionalString("method") as "apiKey" | "oidc" | undefined) ??
-    "apiKey";
+    (authConfig?.getOptionalString("method") as
+      | "apiKey"
+      | "oidc"
+      | undefined) ?? "apiKey";
 
   if (method !== "oidc") {
     return {method: "apiKey"};

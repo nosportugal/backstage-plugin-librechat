@@ -91,8 +91,12 @@ export function createAuthRouter(options: AuthRouterOptions): express.Router {
   });
 
   router.get("/auth/callback", async (req, res) => {
-    const {code, state, error, error_description: errorDescription} =
-      req.query as Record<string, string | undefined>;
+    const {
+      code,
+      state,
+      error,
+      error_description: errorDescription,
+    } = req.query as Record<string, string | undefined>;
 
     if (error) {
       logger.warn(`OIDC callback error: ${error} ${errorDescription ?? ""}`);
@@ -102,7 +106,9 @@ export function createAuthRouter(options: AuthRouterOptions): express.Router {
       return;
     }
     if (!code || !state) {
-      res.status(400).send(renderCallbackPage({error: "Missing code or state"}));
+      res
+        .status(400)
+        .send(renderCallbackPage({error: "Missing code or state"}));
       return;
     }
 
@@ -145,7 +151,8 @@ export function createAuthRouter(options: AuthRouterOptions): express.Router {
       logger.info(`OIDC session established for ${pendingAuth.userEntityRef}`);
       res.status(200).send(renderCallbackPage({userLabel}));
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Token exchange failed";
+      const message =
+        err instanceof Error ? err.message : "Token exchange failed";
       logger.warn(`OIDC callback exchange failed: ${message}`);
       res.status(200).send(renderCallbackPage({error: message}));
     }

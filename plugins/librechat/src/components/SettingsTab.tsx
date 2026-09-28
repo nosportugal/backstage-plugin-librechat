@@ -308,7 +308,9 @@ export function SettingsTab({onBack}: SettingsTabProps) {
                   size="small"
                   variant="contained"
                   color="primary"
-                  disabled={auth.status === "connecting" || auth.status === "loading"}
+                  disabled={
+                    auth.status === "connecting" || auth.status === "loading"
+                  }
                   onClick={() => void auth.connect()}
                 >
                   Sign in

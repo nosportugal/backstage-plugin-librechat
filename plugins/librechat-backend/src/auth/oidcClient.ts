@@ -133,7 +133,9 @@ export class OidcClient {
         }`,
       );
       const err = new Error(
-        body.error_description ?? body.error ?? `Token endpoint returned ${res.status}`,
+        body.error_description ??
+          body.error ??
+          `Token endpoint returned ${res.status}`,
       );
       (err as {code?: string}).code = body.error ?? "token_request_failed";
       throw err;
@@ -154,9 +156,11 @@ function decodeIdToken(
   try {
     const [, payload] = token.split(".");
     if (!payload) return undefined;
-    return JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf8"),
-    ) as {email?: string; preferred_username?: string; sub?: string};
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
+      email?: string;
+      preferred_username?: string;
+      sub?: string;
+    };
   } catch {
     return undefined;
   }

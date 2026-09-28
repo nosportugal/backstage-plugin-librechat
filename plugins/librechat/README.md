@@ -113,7 +113,6 @@ Behaviour notes:
 - Access tokens are validated for issuer/audience/expiry before proxying; signature verification remains LibreChat's job. Expired sessions surface in the chat UI as a prompt to sign in again.
 - Requires a LibreChat version whose beta Agents API supports `remoteApi.auth.oidc`.
 
-
 | Setting                | Required | Visibility | Description                                                                                                    |
 | ---------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
 | `baseUrl`              | ✅       | frontend   | URL of your LibreChat instance                                                                                 |
@@ -144,13 +143,13 @@ In `apiKey` mode both accept an optional `x-librechat-api-key` header to overrid
 
 OIDC mode additionally mounts `/api/librechat/auth/*`:
 
-| Method | Path        | Description                                                        |
-| ------ | ----------- | ------------------------------------------------------------------ |
+| Method | Path             | Description                                                 |
+| ------ | ---------------- | ----------------------------------------------------------- |
 | `GET`  | `/auth/start`    | Starts the PKCE flow; redirects the popup to the IdP.       |
 | `GET`  | `/auth/callback` | IdP redirect target; posts the result to the opener window. |
-| `GET`  | `/auth/status`   | Reports whether the caller has a live OIDC session.        |
-| `POST` | `/auth/refresh`  | Mints a new access token from the stored refresh token.    |
-| `POST` | `/auth/logout`   | Deletes the caller's stored session.                       |
+| `GET`  | `/auth/status`   | Reports whether the caller has a live OIDC session.         |
+| `POST` | `/auth/refresh`  | Mints a new access token from the stored refresh token.     |
+| `POST` | `/auth/logout`   | Deletes the caller's stored session.                        |
 
 ## How it works
 

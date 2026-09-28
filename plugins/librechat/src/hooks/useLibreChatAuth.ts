@@ -149,7 +149,9 @@ export function useLibreChatAuth(): LibreChatAuthState {
         POPUP_FEATURES,
       );
       if (!popup) {
-        resolve({error: "Popup blocked — allow popups for this site and retry."});
+        resolve({
+          error: "Popup blocked — allow popups for this site and retry.",
+        });
         return;
       }
       popupRef.current = popup;

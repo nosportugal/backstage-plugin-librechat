@@ -101,9 +101,9 @@ export class LibreChatAuthError extends Error {
 }
 
 function extractError(errorBody: unknown, status: number): Error {
-  const body = (typeof errorBody === "object" && errorBody !== null
-    ? errorBody
-    : {}) as {error?: unknown; details?: unknown};
+  const body = (
+    typeof errorBody === "object" && errorBody !== null ? errorBody : {}
+  ) as {error?: unknown; details?: unknown};
   if (body.error === "not_connected" || body.error === "token_invalid") {
     return new LibreChatAuthError(
       body.error,
