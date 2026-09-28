@@ -12,7 +12,11 @@ import LinkIcon from "@material-ui/icons/Link";
 import HistoryIcon from "@material-ui/icons/History";
 import AddIcon from "@material-ui/icons/Add";
 import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
-import {libreChatApiRef, ChatMessage as ChatMessageType} from "../api";
+import {
+  libreChatApiRef,
+  ChatMessage as ChatMessageType,
+  LibreChatAuthError,
+} from "../api";
 import {ChatMessage} from "./ChatMessage";
 import {SettingsTab} from "./SettingsTab";
 import {HistoryTab} from "./HistoryTab";
@@ -257,7 +261,11 @@ export function ChatPanel() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      setError(msg);
+      setError(
+        err instanceof LibreChatAuthError
+          ? `${msg} Open Settings to sign in again.`
+          : msg,
+      );
       // Remove the empty assistant placeholder on error
       setMessages(updatedMessages);
     } finally {

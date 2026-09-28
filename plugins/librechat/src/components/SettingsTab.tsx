@@ -10,8 +10,11 @@ import Link from "@material-ui/core/Link";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import SaveIcon from "@material-ui/icons/Save";
 import DeleteIcon from "@material-ui/icons/Delete";
+import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import ErrorOutlineIcon from "@material-ui/icons/ErrorOutline";
 import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {useLibreChatSettings, ChatSize} from "../hooks/useLibreChatSettings";
+import {useLibreChatAuth} from "../hooks/useLibreChatAuth";
 
 const DEFAULT_API_KEY_DESCRIPTION = "Enter your Librechat key.";
 
@@ -138,6 +141,31 @@ const useStyles = makeStyles((theme: Theme) => ({
     fontSize: "0.85rem",
     zIndex: 1,
   },
+  connectionCard: {
+    display: "flex",
+    flexDirection: "column",
+    gap: theme.spacing(1),
+    padding: theme.spacing(1.5),
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: theme.shape.borderRadius,
+  },
+  connectionStatus: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1),
+    fontSize: "0.9rem",
+  },
+  connectionActions: {
+    display: "flex",
+    gap: theme.spacing(1),
+    marginTop: theme.spacing(0.5),
+  },
+  statusOk: {
+    color: theme.palette.success?.main ?? "#4caf50",
+  },
+  statusError: {
+    color: theme.palette.error.main,
+  },
 }));
 
 interface SettingsTabProps {
@@ -154,6 +182,8 @@ export function SettingsTab({onBack}: SettingsTabProps) {
   const classes = useStyles();
   const configApi = useApi(configApiRef);
   const {settings, saveSettings, clearSettings} = useLibreChatSettings();
+  const auth = useLibreChatAuth();
+  const isOidc = auth.method === "oidc";
 
   const apiKeyDescription =
     configApi.getOptionalString("librechat.apiKeyDescription") ??
@@ -167,6 +197,16 @@ export function SettingsTab({onBack}: SettingsTabProps) {
     setApiKey(settings.apiKey);
     setChatSize(settings.chatSize);
   }, [settings]);
+
+  // OIDC mode supersedes per-user keys: drop a previously stored key once,
+  // matching the Excel add-in's legacy-key cleanup. Keys stored while in
+  // apiKey mode are never touched.
+  useEffect(() => {
+    if (isOidc && settings.apiKey) {
+      void clearSettings();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOidc]);
 
   const handleSave = async () => {
     await saveSettings({apiKey, chatSize});
@@ -196,23 +236,87 @@ export function SettingsTab({onBack}: SettingsTabProps) {
       </div>
 
       <div className={classes.content}>
-        <Typography className={classes.description}>
-          {renderDescription(apiKeyDescription)}
-        </Typography>
+        {!isOidc && (
+          <>
+            <Typography className={classes.description}>
+              {renderDescription(apiKeyDescription)}
+            </Typography>
 
-        <div className={classes.apiKeyRow}>
-          <TextField
-            className={classes.apiKeyField}
-            label="API Key"
-            variant="outlined"
-            size="small"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Your LibreChat API key"
-            helperText="Overrides the server-configured API key"
-          />
-        </div>
+            <div className={classes.apiKeyRow}>
+              <TextField
+                className={classes.apiKeyField}
+                label="API Key"
+                variant="outlined"
+                size="small"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Your LibreChat API key"
+                helperText="Overrides the server-configured API key"
+              />
+            </div>
+          </>
+        )}
+
+        {isOidc && (
+          <div className={classes.connectionCard}>
+            <Typography className={classes.fieldLabel}>Connection</Typography>
+            <div className={classes.connectionStatus}>
+              {auth.status === "connected" && (
+                <>
+                  <CheckCircleIcon
+                    className={classes.statusOk}
+                    fontSize="small"
+                  />
+                  <Typography component="span">
+                    Connected{auth.userLabel ? ` as ${auth.userLabel}` : ""}
+                  </Typography>
+                </>
+              )}
+              {auth.status === "connecting" && (
+                <Typography component="span">Waiting for sign-in…</Typography>
+              )}
+              {auth.status === "loading" && (
+                <Typography component="span">Checking connection…</Typography>
+              )}
+              {auth.status === "disconnected" && (
+                <>
+                  <ErrorOutlineIcon
+                    className={classes.statusError}
+                    fontSize="small"
+                  />
+                  <Typography component="span">Not connected</Typography>
+                </>
+              )}
+            </div>
+            {auth.error && (
+              <Typography className={classes.statusError} variant="body2">
+                {auth.error}
+              </Typography>
+            )}
+            <div className={classes.connectionActions}>
+              {auth.status === "connected" ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => void auth.disconnect()}
+                >
+                  Disconnect
+                </Button>
+              ) : (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  disabled={auth.status === "connecting" || auth.status === "loading"}
+                  onClick={() => void auth.connect()}
+                >
+                  Sign in
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div>
           <Typography className={classes.fieldLabel}>Chat size</Typography>
@@ -235,24 +339,28 @@ export function SettingsTab({onBack}: SettingsTabProps) {
         </div>
 
         <div className={classes.actions}>
-          <IconButton
-            className={`${classes.actionButton} ${classes.saveButton}`}
-            size="small"
-            onClick={handleSave}
-            title="Save settings"
-            aria-label="Save settings"
-          >
-            <SaveIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            className={`${classes.actionButton} ${classes.clearButton}`}
-            size="small"
-            onClick={handleClear}
-            title="Clear settings"
-            aria-label="Clear settings"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          {!isOidc && (
+            <>
+              <IconButton
+                className={`${classes.actionButton} ${classes.saveButton}`}
+                size="small"
+                onClick={handleSave}
+                title="Save settings"
+                aria-label="Save settings"
+              >
+                <SaveIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                className={`${classes.actionButton} ${classes.clearButton}`}
+                size="small"
+                onClick={handleClear}
+                title="Clear settings"
+                aria-label="Clear settings"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </>
+          )}
         </div>
 
         {saved && (

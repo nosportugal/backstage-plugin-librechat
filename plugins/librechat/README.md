@@ -70,8 +70,49 @@ librechat:
   enabled: true
   # Optional: allow unauthenticated access to /api/librechat/* (default: false)
   # WARNING: set true only if you intentionally want a public plugin route.
+  # Cannot be combined with auth.method: oidc.
   allowUnauthenticated: false
+  # Optional: authentication method for the LibreChat Agents API (default: apiKey)
+  auth:
+    method: oidc
+    oidc:
+      issuer: https://login.microsoftonline.com/<tenant-id>/v2.0
+      clientId: <app-registration-client-id>
+      audience: api://librechat-agents
+      # Optional, defaults shown:
+      scopes: [openid, profile, email, offline_access]
 ```
+
+## OIDC authentication
+
+By default the plugin authenticates to LibreChat with API keys (`auth.method: apiKey`, the original behaviour). Setting `auth.method: oidc` switches the deployment to OpenID Connect: users click **Sign in** in the chat Settings tab, complete a PKCE flow in a popup, and the backend holds the resulting refresh token — injecting access tokens into upstream calls itself, so token material never reaches the browser.
+
+Two sides must be configured consistently:
+
+1. **Your OIDC provider** — register a public client (no client secret) with the redirect URI `https://<your-backstage>/api/librechat/auth/callback` and grant the scopes above. For Microsoft Entra ID: create an app registration, expose an API scope, and use `api://<app-id>` as `audience`.
+2. **LibreChat** — enable OIDC on the Agents API so it accepts your provider's tokens:
+
+```yaml
+# librechat.yaml
+endpoints:
+  agents:
+    remoteApi:
+      auth:
+        oidc:
+          enabled: true
+          issuer: https://login.microsoftonline.com/<tenant-id>/v2.0
+          audience: api://librechat-agents
+```
+
+LibreChat matches tokens to existing users by `sub`, then `email`, `preferred_username`, or `upn` — users must already exist in LibreChat. See the [LibreChat Agents API docs](https://www.librechat.ai/docs/features/agents_api#oidc-bearer-token) for details.
+
+Behaviour notes:
+
+- The auth method is deployment-wide, set by the adopter. In OIDC mode the Settings tab replaces the API key field with a Connection card, and any previously stored per-user key is removed.
+- OIDC mode requires Backstage-authenticated plugin routes (sessions are bound to Backstage user identities). Combining `auth.method: oidc` with `allowUnauthenticated: true` fails backend startup.
+- Access tokens are validated for issuer/audience/expiry before proxying; signature verification remains LibreChat's job. Expired sessions surface in the chat UI as a prompt to sign in again.
+- Requires a LibreChat version whose beta Agents API supports `remoteApi.auth.oidc`.
+
 
 | Setting                | Required | Visibility | Description                                                                                                    |
 | ---------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------- |
@@ -97,9 +138,19 @@ The backend plugin mounts under `/api/librechat`:
 | Method | Path     | Description                                                               |
 | ------ | -------- | ------------------------------------------------------------------------- |
 | `POST` | `/chat`  | Proxies a chat completion to LibreChat and streams the SSE response back. |
-| `POST` | `/check` | Validates an API key by sending a short test message to LibreChat.        |
+| `POST` | `/check` | Validates the caller's credential by sending a short test message.        |
 
-Both accept optional `x-librechat-api-key` and `x-librechat-agent-id` headers to override the configured defaults.
+In `apiKey` mode both accept an optional `x-librechat-api-key` header to override the configured default. In `oidc` mode credential headers are ignored — the backend injects the caller's stored token.
+
+OIDC mode additionally mounts `/api/librechat/auth/*`:
+
+| Method | Path        | Description                                                        |
+| ------ | ----------- | ------------------------------------------------------------------ |
+| `GET`  | `/auth/start`    | Starts the PKCE flow; redirects the popup to the IdP.       |
+| `GET`  | `/auth/callback` | IdP redirect target; posts the result to the opener window. |
+| `GET`  | `/auth/status`   | Reports whether the caller has a live OIDC session.        |
+| `POST` | `/auth/refresh`  | Mints a new access token from the stored refresh token.    |
+| `POST` | `/auth/logout`   | Deletes the caller's stored session.                       |
 
 ## How it works
 
