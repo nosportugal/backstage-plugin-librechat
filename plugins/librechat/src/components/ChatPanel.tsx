@@ -9,12 +9,21 @@ import SendIcon from "@material-ui/icons/Send";
 import SettingsIcon from "@material-ui/icons/Settings";
 import DeleteSweepIcon from "@material-ui/icons/DeleteSweep";
 import LinkIcon from "@material-ui/icons/Link";
+import HistoryIcon from "@material-ui/icons/History";
+import AddIcon from "@material-ui/icons/Add";
 import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {libreChatApiRef, ChatMessage as ChatMessageType} from "../api";
 import {ChatMessage} from "./ChatMessage";
 import {SettingsTab} from "./SettingsTab";
+import {HistoryTab} from "./HistoryTab";
 import {useLibreChatSettings} from "../hooks/useLibreChatSettings";
 import {usePageContext} from "../hooks/usePageContext";
+import {useLibreChatHistory} from "../hooks/useLibreChatHistory";
+import Dialog from "@material-ui/core/Dialog";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogActions from "@material-ui/core/DialogActions";
+import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -73,6 +82,14 @@ const useStyles = makeStyles((theme: Theme) => ({
     borderRadius: 6,
     fontSize: "0.85rem",
   },
+  notice: {
+    margin: theme.spacing(1, 2, 0),
+    padding: theme.spacing(1),
+    background: theme.palette.info.light,
+    color: theme.palette.info.contrastText,
+    borderRadius: 6,
+    fontSize: "0.75rem",
+  },
   contextBar: {
     display: "flex",
     alignItems: "center",
@@ -99,15 +116,51 @@ export function ChatPanel() {
   const {settings} = useLibreChatSettings();
   const pageContext = usePageContext();
   const agentName = configApi.getOptionalString("librechat.name") ?? "AI";
+  const {
+    conversations,
+    activeConversationId: storedActiveConversationId,
+    retentionNoticeShown,
+    saveConversation,
+    deleteConversation,
+    clearAll,
+    markRetentionNoticeShown,
+    startNewConversation,
+    selectConversation,
+  } = useLibreChatHistory();
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [retentionNotice, setRetentionNotice] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<
+    {type: "conversation"; id: string} | {type: "all"} | null
+  >(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef(false);
+  const restoredRef = useRef(false);
+
+  useEffect(() => {
+    if (restoredRef.current || !storedActiveConversationId) return;
+    const activeConversation = conversations.find(
+      (conversation) => conversation.id === storedActiveConversationId,
+    );
+    if (activeConversation) {
+      setMessages(activeConversation.messages);
+      setConversationId(activeConversation.id);
+    }
+    restoredRef.current = true;
+  }, [conversations, storedActiveConversationId]);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current = true;
+    };
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
@@ -137,7 +190,8 @@ export function ChatPanel() {
     setMessages([...updatedMessages, assistantMessage]);
 
     try {
-      // Inject page context into the latest user message
+      // Inject page context into the latest user message. The clean message
+      // list remains in local history; context is request-only metadata.
       const contextSuffix = [
         "",
         "[Page context]",
@@ -148,7 +202,7 @@ export function ChatPanel() {
 
       const messagesWithContext = updatedMessages.map((msg, idx) =>
         idx === updatedMessages.length - 1 && msg.role === "user"
-          ? {...msg, content: `${msg.content}\n${contextSuffix}`}
+          ? {...msg, content: `${msg.content}${contextSuffix}`}
           : msg,
       );
 
@@ -177,8 +231,28 @@ export function ChatPanel() {
         });
       }
 
-      // If accumulated is empty, remove the empty assistant message
-      if (!accumulated) {
+      // Only completed exchanges enter local history. An interrupted or empty
+      // response leaves the user question visible until the panel is closed.
+      if (accumulated && !abortRef.current) {
+        const completedMessages = [
+          ...updatedMessages,
+          {
+            role: "assistant" as const,
+            content: accumulated,
+          },
+        ];
+        const result = await saveConversation(
+          completedMessages,
+          conversationId,
+        );
+        if (result?.evicted && !retentionNoticeShown) {
+          setRetentionNotice(true);
+          await markRetentionNoticeShown();
+        }
+        if (result) {
+          setConversationId(result.id);
+        }
+      } else {
         setMessages(updatedMessages);
       }
     } catch (err: unknown) {
@@ -189,7 +263,18 @@ export function ChatPanel() {
     } finally {
       setIsStreaming(false);
     }
-  }, [input, isStreaming, messages, libreChatApi, settings, pageContext]);
+  }, [
+    conversationId,
+    input,
+    isStreaming,
+    libreChatApi,
+    markRetentionNoticeShown,
+    messages,
+    pageContext,
+    retentionNoticeShown,
+    saveConversation,
+    settings,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -202,15 +287,103 @@ export function ChatPanel() {
   );
 
   const handleClear = useCallback(() => {
+    if (isStreaming) return;
     setMessages([]);
+    setConversationId(null);
     setError(null);
-    abortRef.current = true;
-  }, []);
+    setInput("");
+    setRetentionNotice(false);
+    void startNewConversation();
+  }, [isStreaming, startNewConversation]);
+
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      if (isStreaming) return;
+      const conversation = conversations.find((item) => item.id === id);
+      if (!conversation) return;
+      setMessages(conversation.messages);
+      setConversationId(conversation.id);
+      setError(null);
+      setRetentionNotice(false);
+      setShowHistory(false);
+      void selectConversation(conversation.id);
+    },
+    [conversations, isStreaming, selectConversation],
+  );
+
+  const handleDeleteConversation = useCallback(
+    async (id: string) => {
+      if (isStreaming) return;
+      setConfirmAction({type: "conversation", id});
+    },
+    [isStreaming],
+  );
+
+  const handleDeleteAll = useCallback(() => {
+    if (isStreaming) return;
+    setConfirmAction({type: "all"});
+  }, [isStreaming]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!confirmAction) return;
+    if (confirmAction.type === "all") {
+      await clearAll();
+      handleClear();
+    } else {
+      await deleteConversation(confirmAction.id);
+      if (conversationId === confirmAction.id) {
+        handleClear();
+      }
+    }
+    setConfirmAction(null);
+  }, [
+    clearAll,
+    confirmAction,
+    conversationId,
+    deleteConversation,
+    handleClear,
+  ]);
 
   if (showSettings) {
     return (
       <div className={classes.root}>
         <SettingsTab onBack={() => setShowSettings(false)} />
+      </div>
+    );
+  }
+
+  if (showHistory) {
+    return (
+      <div className={classes.root}>
+        <HistoryTab
+          conversations={conversations}
+          activeConversationId={conversationId}
+          onBack={() => setShowHistory(false)}
+          onSelect={handleSelectConversation}
+          onDelete={(id) => void handleDeleteConversation(id)}
+          onDeleteAll={handleDeleteAll}
+        />
+        <Dialog
+          open={Boolean(confirmAction)}
+          onClose={() => setConfirmAction(null)}
+          aria-labelledby="librechat-confirm-title"
+        >
+          <DialogTitle id="librechat-confirm-title">
+            {confirmAction?.type === "all"
+              ? "Delete all local chat history?"
+              : "Delete this conversation?"}
+          </DialogTitle>
+          <DialogContent>This action cannot be undone.</DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmAction(null)}>Cancel</Button>
+            <Button
+              color="secondary"
+              onClick={() => void handleConfirmDelete()}
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     );
   }
@@ -222,8 +395,23 @@ export function ChatPanel() {
           {agentName} Chat
         </Typography>
         <div className={classes.headerActions}>
-          <IconButton size="small" onClick={handleClear} title="Clear chat">
-            <DeleteSweepIcon fontSize="small" />
+          <IconButton
+            size="small"
+            onClick={handleClear}
+            disabled={isStreaming || messages.length === 0}
+            title="New chat"
+            aria-label="New chat"
+          >
+            <AddIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => setShowHistory(true)}
+            disabled={isStreaming}
+            title="Chat history"
+            aria-label="Chat history"
+          >
+            <HistoryIcon fontSize="small" />
           </IconButton>
           <IconButton
             size="small"
@@ -264,6 +452,11 @@ export function ChatPanel() {
         <div ref={messagesEndRef} />
       </div>
 
+      {retentionNotice && (
+        <div className={classes.notice} role="status">
+          Only the five most recent conversations are saved locally.
+        </div>
+      )}
       {error && <div className={classes.error}>{error}</div>}
 
       <div className={classes.inputArea}>
@@ -290,6 +483,25 @@ export function ChatPanel() {
           {isStreaming ? <CircularProgress size={24} /> : <SendIcon />}
         </IconButton>
       </div>
+
+      <Dialog
+        open={Boolean(confirmAction)}
+        onClose={() => setConfirmAction(null)}
+        aria-labelledby="librechat-confirm-title"
+      >
+        <DialogTitle id="librechat-confirm-title">
+          {confirmAction?.type === "all"
+            ? "Delete all local chat history?"
+            : "Delete this conversation?"}
+        </DialogTitle>
+        <DialogContent>This action cannot be undone.</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmAction(null)}>Cancel</Button>
+          <Button color="secondary" onClick={() => void handleConfirmDelete()}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

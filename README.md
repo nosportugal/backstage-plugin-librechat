@@ -126,6 +126,6 @@ yarn start:backend   # Backend dev server (port 7007)
 
 <div align="center">
 
-**Made with ❤️ by [NOS Inovação](https://github.com/nosportugal)**
+**Made with ❤️ by [NOS](https://github.com/nosportugal)**
 
 </div>
