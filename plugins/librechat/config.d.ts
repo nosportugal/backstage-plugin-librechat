@@ -39,5 +39,19 @@ export interface Config {
      * @visibility frontend
      */
     iconPath?: string;
+
+    /**
+     * Authentication used when calling the LibreChat Agents API.
+     * Mirrors the backend plugin schema; only the visibility of `method`
+     * matters to the frontend (it selects the Settings UI).
+     */
+    auth?: {
+      /**
+       * 'apiKey' (default) — users supply a LibreChat API key in Settings.
+       * 'oidc' — users sign in with the configured OIDC provider instead.
+       * @visibility frontend
+       */
+      method?: "apiKey" | "oidc";
+    };
   };
 }

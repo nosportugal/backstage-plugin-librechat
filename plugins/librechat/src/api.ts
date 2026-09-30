@@ -20,7 +20,7 @@ export interface LibreChatApi {
    * Sends messages to LibreChat and yields streamed content chunks.
    *
    * @param messages - Conversation history
-   * @param options - Optional override for apiKey
+   * @param options - Optional override for apiKey (apiKey auth method only)
    * @returns An async generator yielding content strings as they arrive
    */
   sendMessage(
@@ -35,6 +35,14 @@ export interface LibreChatApi {
    * @returns The assistant's reply
    */
   checkApiKey(apiKey: string): Promise<string>;
+
+  /**
+   * In OIDC mode, checks that the caller's backend-held session works by
+   * sending a short test message. Not available in apiKey mode.
+   *
+   * @returns The assistant's reply
+   */
+  checkConnection(): Promise<string>;
 }
 
 /**
@@ -76,6 +84,38 @@ function extractErrorMessage(errorBody: unknown, status: number): string {
 }
 
 /**
+ * Error thrown when the backend reports a missing or invalid OIDC session
+ * (`not_connected` / `token_invalid`). The chat UI catches this to show a
+ * reconnect prompt instead of a generic failure.
+ *
+ * @public
+ */
+export class LibreChatAuthError extends Error {
+  readonly code: "not_connected" | "token_invalid";
+
+  constructor(code: "not_connected" | "token_invalid", message: string) {
+    super(message);
+    this.name = "LibreChatAuthError";
+    this.code = code;
+  }
+}
+
+function extractError(errorBody: unknown, status: number): Error {
+  const body = (
+    typeof errorBody === "object" && errorBody !== null ? errorBody : {}
+  ) as {error?: unknown; details?: unknown};
+  if (body.error === "not_connected" || body.error === "token_invalid") {
+    return new LibreChatAuthError(
+      body.error,
+      typeof body.details === "string"
+        ? body.details
+        : "Your LibreChat session has expired. Sign in again from Settings.",
+    );
+  }
+  return new Error(extractErrorMessage(errorBody, status));
+}
+
+/**
  * Default implementation of the LibreChat API.
  * Calls the backend proxy and parses the SSE stream.
  *
@@ -108,7 +148,25 @@ export class DefaultLibreChatApi implements LibreChatApi {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(extractErrorMessage(data, response.status));
+      throw extractError(data, response.status);
+    }
+
+    const data = (await response.json()) as {ok: boolean; reply: string};
+    return data.reply;
+  }
+
+  async checkConnection(): Promise<string> {
+    const response = await this.fetchApi.fetch(
+      `${this.backendBaseUrl}/api/librechat/check`,
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+      },
+    );
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw extractError(data, response.status);
     }
 
     const data = (await response.json()) as {ok: boolean; reply: string};
@@ -133,7 +191,7 @@ export class DefaultLibreChatApi implements LibreChatApi {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw new Error(extractErrorMessage(errorBody, response.status));
+      throw extractError(errorBody, response.status);
     }
 
     const reader = response.body?.getReader();

@@ -33,4 +33,27 @@ librechat:
   agentId: agent_YOUR_AGENT_ID_HERE
   # Optional: allow anonymous access to /api/librechat/* (default: false)
   # Set to true only for trusted/dev environments.
+  # Cannot be combined with auth.method: oidc (OIDC sessions are bound to
+  # Backstage user identities, which anonymous routes do not have).
   allowUnauthenticated: false
+  # Optional: authentication method for the LibreChat Agents API.
+  # Omit this block (or set method: apiKey) for the default behaviour:
+  # users paste their own LibreChat API key in the chat Settings tab.
+  auth:
+    # apiKey (default) | oidc
+    method: apiKey
+    # Required when method is oidc. Users sign in with the configured
+    # provider via a PKCE popup; the backend holds refresh tokens and
+    # injects access tokens server-side.
+    # Your LibreChat instance must also enable OIDC on the Agents API —
+    # see plugins/librechat/README.md (OIDC authentication).
+    # oidc:
+    #   # Issuer URL serving .well-known/openid-configuration
+    #   issuer: https://login.microsoftonline.com/<tenant-id>/v2.0
+    #   # Client ID of a public OAuth app registration (no secret).
+    #   # Register redirect URI: https://<your-backstage>/api/librechat/auth/callback
+    #   clientId: <app-registration-client-id>
+    #   # Must match endpoints.agents.remoteApi.auth.oidc.audience in librechat.yaml
+    #   audience: api://librechat-agents
+    #   # Optional, defaults shown:
+    #   scopes: [openid, profile, email, offline_access]
