@@ -142,20 +142,45 @@ export function useLibreChatAuth(): LibreChatAuthState {
     setStatus("connecting");
     setError(undefined);
 
-    const result = await new Promise<CallbackMessage>((resolve) => {
-      const popup = window.open(
-        `${backendBaseUrl}/api/librechat/auth/start`,
-        "librechat-oidc",
-        POPUP_FEATURES,
-      );
-      if (!popup) {
-        resolve({
-          error: "Popup blocked — allow popups for this site and retry.",
-        });
-        return;
-      }
-      popupRef.current = popup;
+    const popup = window.open("about:blank", "librechat-oidc", POPUP_FEATURES);
+    if (!popup) {
+      setStatus("disconnected");
+      setError("Popup blocked — allow popups for this site and retry.");
+      return;
+    }
+    popupRef.current = popup;
 
+    try {
+      const response = await fetchApi.fetch(
+        `${backendBaseUrl}/api/librechat/auth/start`,
+        {headers: {Accept: "application/json"}},
+      );
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as {
+          error?: {message?: string} | string;
+        };
+        const message =
+          typeof data.error === "string"
+            ? data.error
+            : (data.error?.message ?? `Start returned ${response.status}`);
+        throw new Error(message);
+      }
+      const {authorizationUrl} = (await response.json()) as {
+        authorizationUrl?: string;
+      };
+      if (!authorizationUrl) {
+        throw new Error("Start response did not include an authorization URL");
+      }
+      popup.location.assign(authorizationUrl);
+    } catch (err) {
+      popup.close();
+      popupRef.current = null;
+      setStatus("disconnected");
+      setError(err instanceof Error ? err.message : "Failed to start sign-in");
+      return;
+    }
+
+    const result = await new Promise<CallbackMessage>((resolve) => {
       const expectedOrigin = new URL(backendBaseUrl).origin;
       // eslint-disable-next-line prefer-const -- assigned after onMessage exists
       let closeWatcher: ReturnType<typeof setInterval> | undefined;

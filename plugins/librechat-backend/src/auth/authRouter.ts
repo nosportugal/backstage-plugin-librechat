@@ -87,6 +87,12 @@ export function createAuthRouter(options: AuthRouterOptions): express.Router {
       codeChallenge: codeChallengeFor(codeVerifier),
     });
     logger.debug(`OIDC start for ${userEntityRef}`);
+
+    if (req.accepts(["application/json", "html"]) === "application/json") {
+      res.json({authorizationUrl: url});
+      return;
+    }
+
     res.redirect(url);
   });
 
