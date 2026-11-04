@@ -1,4 +1,4 @@
-import {useState, useEffect, useCallback} from "react";
+import {useState, useEffect, useCallback, useRef} from "react";
 import {
   useApi,
   storageApiRef,
@@ -83,6 +83,27 @@ export function useLibreChatHistory() {
     string | null
   >(null);
   const [retentionNoticeShown, setRetentionNoticeShown] = useState(false);
+  // Mirrors the latest history so callbacks captured before an awaited
+  // mutation (e.g. delete) never persist a stale conversation list.
+  const historyRef = useRef<{
+    conversations: LibreChatConversation[];
+    activeConversationId: string | null;
+  }>({conversations: [], activeConversationId: null});
+
+  const applyHistory = useCallback(
+    (
+      nextConversations: LibreChatConversation[],
+      nextActiveConversationId: string | null,
+    ) => {
+      historyRef.current = {
+        conversations: nextConversations,
+        activeConversationId: nextActiveConversationId,
+      };
+      setConversations(nextConversations);
+      setActiveConversationId(nextActiveConversationId);
+    },
+    [],
+  );
 
   useEffect(() => {
     let active = true;
@@ -113,8 +134,7 @@ export function useLibreChatHistory() {
         const stored = parseHistory(snapshot, userKey);
         const notice = bucket.snapshot<boolean>(NOTICE_KEY).value ?? false;
         if (active) {
-          setConversations(stored.conversations);
-          setActiveConversationId(stored.activeConversationId);
+          applyHistory(stored.conversations, stored.activeConversationId);
           setRetentionNoticeShown(notice);
         }
       } catch {
@@ -128,8 +148,7 @@ export function useLibreChatHistory() {
       .subscribe((next) => {
         if (active) {
           const stored = parseHistory(next.value ?? "", userKey);
-          setConversations(stored.conversations);
-          setActiveConversationId(stored.activeConversationId);
+          applyHistory(stored.conversations, stored.activeConversationId);
         }
       });
 
@@ -137,7 +156,7 @@ export function useLibreChatHistory() {
       active = false;
       subscription.unsubscribe();
     };
-  }, [bucket, userKey]);
+  }, [applyHistory, bucket, userKey]);
 
   const persist = useCallback(
     async (
@@ -169,8 +188,9 @@ export function useLibreChatHistory() {
       );
       if (!firstUserMessage) return null;
 
+      const current = historyRef.current;
       const id = previousId ?? createId();
-      const existing = conversations.find(
+      const existing = current.conversations.find(
         (conversation) => conversation.id === id,
       );
       const conversation: LibreChatConversation = {
@@ -181,35 +201,35 @@ export function useLibreChatHistory() {
       };
       const next = [
         conversation,
-        ...conversations.filter((item) => item.id !== id),
+        ...current.conversations.filter((item) => item.id !== id),
       ];
       const trimmed = next.slice(0, MAX_CONVERSATIONS);
       const evicted = next.length > MAX_CONVERSATIONS;
-      setConversations(trimmed);
-      setActiveConversationId(id);
+      applyHistory(trimmed, id);
       await persist(trimmed, id);
       return {id, evicted};
     },
-    [conversations, persist, userKey],
+    [applyHistory, persist, userKey],
   );
 
   const deleteConversation = useCallback(
     async (id: string) => {
-      const next = conversations.filter(
+      const current = historyRef.current;
+      const next = current.conversations.filter(
         (conversation) => conversation.id !== id,
       );
       const nextActive =
-        activeConversationId === id ? null : activeConversationId;
-      setConversations(next);
-      setActiveConversationId(nextActive);
+        current.activeConversationId === id
+          ? null
+          : current.activeConversationId;
+      applyHistory(next, nextActive);
       await persist(next, nextActive);
     },
-    [activeConversationId, conversations, persist],
+    [applyHistory, persist],
   );
 
   const clearAll = useCallback(async () => {
-    setConversations([]);
-    setActiveConversationId(null);
+    applyHistory([], null);
     if (userKey) {
       try {
         await bucket.remove(STORAGE_KEY);
@@ -217,7 +237,7 @@ export function useLibreChatHistory() {
         // Ignore unavailable local storage.
       }
     }
-  }, [bucket, userKey]);
+  }, [applyHistory, bucket, userKey]);
 
   const markRetentionNoticeShown = useCallback(async () => {
     setRetentionNoticeShown(true);
@@ -229,25 +249,26 @@ export function useLibreChatHistory() {
   }, [bucket]);
 
   const startNewConversation = useCallback(async () => {
-    setActiveConversationId(null);
-    await persist(conversations, null);
-  }, [conversations, persist]);
+    const current = historyRef.current;
+    applyHistory(current.conversations, null);
+    await persist(current.conversations, null);
+  }, [applyHistory, persist]);
 
   const selectConversation = useCallback(
     async (id: string) => {
-      const selected = conversations.find(
+      const current = historyRef.current;
+      const selected = current.conversations.find(
         (conversation) => conversation.id === id,
       );
       if (!selected) return;
       const next = [
         {...selected, updatedAt: Date.now()},
-        ...conversations.filter((conversation) => conversation.id !== id),
+        ...current.conversations.filter((conversation) => conversation.id !== id),
       ];
-      setConversations(next);
-      setActiveConversationId(id);
+      applyHistory(next, id);
       await persist(next, id);
     },
-    [conversations, persist],
+    [applyHistory, persist],
   );
 
   return {
