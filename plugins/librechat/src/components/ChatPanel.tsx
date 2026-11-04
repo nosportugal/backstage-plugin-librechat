@@ -286,15 +286,19 @@ export function ChatPanel() {
     [handleSend],
   );
 
-  const handleClear = useCallback(() => {
-    if (isStreaming) return;
+  const resetPanel = useCallback(() => {
     setMessages([]);
     setConversationId(null);
     setError(null);
     setInput("");
     setRetentionNotice(false);
+  }, []);
+
+  const handleClear = useCallback(() => {
+    if (isStreaming) return;
+    resetPanel();
     void startNewConversation();
-  }, [isStreaming, startNewConversation]);
+  }, [isStreaming, resetPanel, startNewConversation]);
 
   const handleSelectConversation = useCallback(
     (id: string) => {
@@ -328,21 +332,15 @@ export function ChatPanel() {
     if (!confirmAction) return;
     if (confirmAction.type === "all") {
       await clearAll();
-      handleClear();
+      resetPanel();
     } else {
       await deleteConversation(confirmAction.id);
       if (conversationId === confirmAction.id) {
-        handleClear();
+        resetPanel();
       }
     }
     setConfirmAction(null);
-  }, [
-    clearAll,
-    confirmAction,
-    conversationId,
-    deleteConversation,
-    handleClear,
-  ]);
+  }, [clearAll, confirmAction, conversationId, deleteConversation, resetPanel]);
 
   if (showSettings) {
     return (

@@ -4580,7 +4580,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/globals@npm:30.5.2":
+"@jest/globals@npm:30.5.2, @jest/globals@npm:^30.5.2":
   version: 30.5.2
   resolution: "@jest/globals@npm:30.5.2"
   dependencies:
@@ -6063,6 +6063,7 @@ __metadata:
     "@backstage/theme": "npm:^0.7.0"
     "@backstage/ui": "npm:^0.14.3"
     "@jest/environment-jsdom-abstract": "npm:^30.5.2"
+    "@jest/globals": "npm:^30.5.2"
     "@material-ui/core": "npm:^4.12.4"
     "@material-ui/icons": "npm:^4.11.3"
     "@remixicon/react": "npm:^4.9.0"

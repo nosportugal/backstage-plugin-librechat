@@ -49,6 +49,7 @@
     "@backstage/frontend-dev-utils": "^0.1.6",
     "@backstage/ui": "^0.14.3",
     "@jest/environment-jsdom-abstract": "^30.5.2",
+    "@jest/globals": "^30.5.2",
     "@remixicon/react": "^4.9.0",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
