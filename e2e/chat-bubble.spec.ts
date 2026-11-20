@@ -45,4 +45,47 @@ test.describe("LibreChat chat bubble", () => {
     expect(moved!.x).toBeLessThan(x);
     expect(moved!.y).toBeLessThan(y);
   });
+
+  test("does not cover the search pager's Next button", async ({page}) => {
+    await page.goto("/search");
+    const bubble = page.getByRole("button", {name: "Open chat"});
+    const next = page.getByRole("button", {name: "Next"});
+    await expect(bubble).toBeVisible();
+    await next.scrollIntoViewIfNeeded();
+    await page.mouse.wheel(0, 10_000);
+
+    const b = (await bubble.boundingBox())!;
+    const n = (await next.boundingBox())!;
+    const overlaps =
+      b.x < n.x + n.width &&
+      n.x < b.x + b.width &&
+      b.y < n.y + n.height &&
+      n.y < b.y + b.height;
+    expect(overlaps).toBe(false);
+
+    // A real click (no force) fails if anything sits on top of the button.
+    await next.click();
+    await expect(page.getByText("Page 2")).toBeVisible();
+  });
+
+  test("keeps a dragged position on the search page", async ({page}) => {
+    await page.goto("/search");
+    const bubble = page.getByRole("button", {name: "Open chat"});
+    await expect(bubble).toBeVisible();
+    const start = (await bubble.boundingBox())!;
+
+    await page.mouse.move(start.x + 28, start.y + 28);
+    await page.mouse.down();
+    await page.mouse.move(start.x - 300, start.y - 200, {steps: 12});
+    await page.mouse.up();
+    const dragged = (await bubble.boundingBox())!;
+
+    await page.reload();
+    await expect(bubble).toBeVisible();
+    await expect.poll(async () => (await bubble.boundingBox())!.x).toBeCloseTo(
+      dragged.x,
+      0,
+    );
+    expect((await bubble.boundingBox())!.y).toBeCloseTo(dragged.y, 0);
+  });
 });
