@@ -46,7 +46,7 @@ const app = createApp({
 export default app.createRoot();
 ```
 
-The plugin contributes an app-root overlay (the chat bubble), so there is no route or page to mount — once registered, the bubble appears in the bottom-right corner of every page.
+The plugin contributes an app-root overlay (the chat bubble), so there is no route or page to mount — once registered, the bubble appears in the bottom-right corner of every page (raised slightly on `/search` to clear the results pager; see `bubble` below). Users can drag it anywhere, and their position is remembered.
 
 ## Configuration
 
@@ -68,6 +68,18 @@ librechat:
   apiKeyDescription: "You can set up your LibreChat key [here](https://example.com/key)."
   # Optional: show/hide the chat bubble (default: true)
   enabled: true
+  # Optional: default bubble placement (a user-dragged position always wins)
+  bubble:
+    position:
+      anchor: bottom-right # bottom-right | bottom-left | top-right | top-left
+      offsetX: 24
+      offsetY: 24
+    # Per-route overrides (path prefix, longest match wins). Defaults to raising
+    # the bubble on /search so it clears the results pager; set [] to disable.
+    routes:
+      - path: /search
+        position:
+          offsetY: 120
   # Optional: allow unauthenticated access to /api/librechat/* (default: false)
   # WARNING: set true only if you intentionally want a public plugin route.
   allowUnauthenticated: false
@@ -82,6 +94,8 @@ librechat:
 | `iconPath`             | ❌       | frontend   | Custom bubble icon from a local image in static assets (e.g. `/chat-icon.png`, resolved against `app.baseUrl`) |
 | `apiKeyDescription`    | ❌       | frontend   | Help text above the API key field in Settings; supports `[label](url)` links                                   |
 | `enabled`              | ❌       | frontend   | Show or hide the chat bubble (default: `true`)                                                                 |
+| `bubble.position`      | ❌       | frontend   | Default bubble placement: `anchor` corner plus `offsetX`/`offsetY` in px (default: bottom-right, 24/24)        |
+| `bubble.routes`        | ❌       | frontend   | Per-route placement overrides by path prefix (default: raised to `offsetY: 120` on `/search`)                  |
 | `allowUnauthenticated` | ❌       | backend    | Allow anonymous access to plugin backend routes (default: `false`; enable only for trusted/dev setups)         |
 
 > [!NOTE]

@@ -1,4 +1,4 @@
-import {useState, useRef, useEffect, useCallback} from "react";
+import {useState, useRef, useEffect, useCallback, useMemo} from "react";
 import type {PointerEvent as ReactPointerEvent} from "react";
 import {makeStyles, Theme} from "@material-ui/core/styles";
 import Fab from "@material-ui/core/Fab";
@@ -10,14 +10,20 @@ import CloseIcon from "@material-ui/icons/Close";
 import {useApi, configApiRef} from "@backstage/frontend-plugin-api";
 import {ChatPanel} from "./ChatPanel";
 import {useIsSignedIn} from "../hooks/useIsSignedIn";
+import {usePageContext} from "../hooks/usePageContext";
 import {
   useLibreChatSettings,
   CHAT_SIZE_DIMENSIONS,
   BubblePosition,
 } from "../hooks/useLibreChatSettings";
+import {
+  EDGE_MARGIN,
+  FAB_SIZE,
+  placementToCoords,
+  readBubblePlacementConfig,
+  resolvePlacement,
+} from "./bubblePlacement";
 
-const FAB_SIZE = 56;
-const EDGE_MARGIN = 24;
 const PANEL_GAP = 12;
 /** Pointer travel (px) before a press is treated as a drag rather than a click. */
 const DRAG_THRESHOLD = 4;
@@ -101,12 +107,29 @@ function useIconSrc(): string | undefined {
   return `${baseUrl.replace(/\/+$/, "")}/${iconPath.replace(/^\/+/, "")}`;
 }
 
-/** Default resting position of the bubble: bottom-right corner. */
-function defaultCoords(): Coords {
-  return {
-    x: window.innerWidth - EDGE_MARGIN - FAB_SIZE,
-    y: window.innerHeight - EDGE_MARGIN - FAB_SIZE,
-  };
+/**
+ * Default resting position of the bubble for the current route, from
+ * `librechat.bubble` config (bottom-right by default, raised on /search so it
+ * doesn't cover the results pager). Only used while the user hasn't dragged
+ * the bubble somewhere; a saved position always wins.
+ */
+function useDefaultCoords(): () => Coords {
+  const configApi = useApi(configApiRef);
+  const {path} = usePageContext();
+  const placementConfig = useMemo(
+    () =>
+      readBubblePlacementConfig(configApi.getOptionalConfig("librechat.bubble")),
+    [configApi],
+  );
+  const placement = resolvePlacement(placementConfig, path);
+  return useCallback(
+    () =>
+      placementToCoords(placement, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      }),
+    [placement],
+  );
 }
 
 /** Keep the bubble fully visible within the viewport. */
@@ -144,6 +167,7 @@ export function ChatBubble() {
   const configEnabled = useIsEnabled();
   const iconSrc = useIconSrc();
   const signedIn = useIsSignedIn();
+  const defaultCoords = useDefaultCoords();
   const {settings, saveBubblePosition} = useLibreChatSettings();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<BubblePosition>(null);
@@ -157,12 +181,14 @@ export function ChatBubble() {
   } | null>(null);
   const justDraggedRef = useRef(false);
   const positionRef = useRef<BubblePosition>(null);
+  const defaultCoordsRef = useRef(defaultCoords);
   const saveBubblePositionRef = useRef(saveBubblePosition);
 
   // Mirror the latest values into refs so the global listeners below can read
   // them without being re-created on every render.
   positionRef.current = position;
   saveBubblePositionRef.current = saveBubblePosition;
+  defaultCoordsRef.current = defaultCoords;
 
   // Adopt the persisted position once settings load (or when it changes).
   useEffect(() => {
@@ -232,7 +258,7 @@ export function ChatBubble() {
         return;
       }
       justDraggedRef.current = false;
-      const origin = positionRef.current ?? defaultCoords();
+      const origin = positionRef.current ?? defaultCoordsRef.current();
       dragRef.current = {
         startX: event.clientX,
         startY: event.clientY,
