@@ -39,5 +39,57 @@ export interface Config {
      * @visibility frontend
      */
     iconPath?: string;
+
+    /**
+     * Default placement of the chat bubble. A position the user sets by
+     * dragging the bubble is saved per user and always takes precedence.
+     */
+    bubble?: {
+      /**
+       * Default placement on every page (default: bottom-right, 24px offsets).
+       * @visibility frontend
+       */
+      position?: {
+        /**
+         * Viewport corner the offsets are measured from.
+         * @visibility frontend
+         */
+        anchor?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+        /**
+         * Distance in px from the anchored left/right edge (default: 24).
+         * @visibility frontend
+         */
+        offsetX?: number;
+        /**
+         * Distance in px from the anchored top/bottom edge (default: 24).
+         * @visibility frontend
+         */
+        offsetY?: number;
+      };
+
+      /**
+       * Per-route placement overrides. `path` is a path prefix matched on
+       * segment boundaries; the longest match wins. Paths are relative to the
+       * app root: any sub-path in `app.baseUrl` is stripped before matching.
+       * Unset fields fall back to `bubble.position`. When omitted, a built-in
+       * override raises the bubble on `/search` (offsetY: 120) so it doesn't
+       * cover the results pager; setting this list replaces that built-in (use
+       * `[]` to disable it).
+       * @visibility frontend
+       */
+      routes?: Array<{
+        /** @visibility frontend */
+        path: string;
+        /** @visibility frontend */
+        position?: {
+          /** @visibility frontend */
+          anchor?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+          /** @visibility frontend */
+          offsetX?: number;
+          /** @visibility frontend */
+          offsetY?: number;
+        };
+      }>;
+    };
   };
 }
