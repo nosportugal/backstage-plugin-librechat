@@ -24,6 +24,7 @@ import {
   placementToCoords,
   readBubblePlacementConfig,
   resolvePlacement,
+  stripBasePath,
 } from "./bubblePlacement";
 
 /** Pointer travel (px) before a press is treated as a drag rather than a click. */
@@ -122,7 +123,13 @@ function useDefaultCoords(): () => Coords {
       readBubblePlacementConfig(configApi.getOptionalConfig("librechat.bubble")),
     [configApi],
   );
-  const placement = resolvePlacement(placementConfig, path);
+  // Route prefixes are relative to the app root, not to the host: drop the
+  // base path when the app is served from a sub-path (e.g. /backstage).
+  const appPath = stripBasePath(
+    path,
+    configApi.getOptionalString("app.baseUrl"),
+  );
+  const placement = resolvePlacement(placementConfig, appPath);
   return useCallback(
     () =>
       placementToCoords(placement, {
@@ -289,6 +296,7 @@ export function ChatBubble() {
           <Paper
             className={classes.panel}
             elevation={16}
+            data-testid="librechat-panel"
             style={{
               left: panelRect.left,
               top: panelRect.top,

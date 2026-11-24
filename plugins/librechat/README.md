@@ -74,8 +74,10 @@ librechat:
       anchor: bottom-right # bottom-right | bottom-left | top-right | top-left
       offsetX: 24
       offsetY: 24
-    # Per-route overrides (path prefix, longest match wins). Defaults to raising
-    # the bubble on /search so it clears the results pager; set [] to disable.
+    # Per-route overrides (path prefix, longest match wins). Paths are relative
+    # to the app root, so they work unchanged when app.baseUrl has a sub-path.
+    # Defaults to raising the bubble on /search so it clears the results pager;
+    # set [] to disable.
     routes:
       - path: /search
         position:

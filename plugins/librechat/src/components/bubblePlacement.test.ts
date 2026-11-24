@@ -7,6 +7,7 @@ import {
   placementToCoords,
   readBubblePlacementConfig,
   resolvePlacement,
+  stripBasePath,
 } from "./bubblePlacement";
 
 const viewport = {width: 1280, height: 800};
@@ -84,6 +85,27 @@ describe("bubblePlacement", () => {
     expect(matchesPath("/anything", "/")).toBe(true);
   });
 
+  it("matches routes relative to the app base path", () => {
+    const config = readBubblePlacementConfig(undefined);
+    const baseUrl = "https://host.example/backstage/";
+    expect(stripBasePath("/backstage/search", baseUrl)).toBe("/search");
+    expect(stripBasePath("/backstage/search/x", baseUrl)).toBe("/search/x");
+    expect(stripBasePath("/backstage", baseUrl)).toBe("/");
+    // Not under the base path, or no base path at all: left untouched.
+    expect(stripBasePath("/backstage-2/search", baseUrl)).toBe(
+      "/backstage-2/search",
+    );
+    expect(stripBasePath("/search", "https://host.example")).toBe("/search");
+    expect(stripBasePath("/search", undefined)).toBe("/search");
+
+    expect(
+      resolvePlacement(config, stripBasePath("/backstage/search", baseUrl)),
+    ).toEqual({anchor: "bottom-right", offsetX: 24, offsetY: 120});
+    expect(
+      resolvePlacement(config, stripBasePath("/backstage/catalog", baseUrl)),
+    ).toEqual(DEFAULT_PLACEMENT);
+  });
+
   describe("computePanelRect", () => {
     const sizes = {
       small: {width: 340, height: 480},
@@ -135,6 +157,49 @@ describe("bubblePlacement", () => {
       const vp = {width: 1280, height: 720};
       const rect = computePanelRect({x: 24, y: 544}, sizes.medium, vp);
       expect(rect.left).toBe(24 + 56 + 12);
+    });
+
+    it("shortens the panel instead of covering the bubble on narrow viewports", () => {
+      // 500px wide: no room beside the bubble, so the panel used to be
+      // clamped on top of it.
+      const vp = {width: 500, height: 720};
+      const bubble = {x: 500 - 24 - 56, y: 720 - 120 - 56};
+      const rect = computePanelRect(bubble, sizes.medium, vp);
+      expect(rect).toEqual({left: 76, top: 24, height: 544 - 12 - 24});
+      expect(rect.top + rect.height).toBeLessThanOrEqual(bubble.y - 12);
+    });
+
+    it("uses the room below when the bubble sits in the upper half", () => {
+      const vp = {width: 500, height: 720};
+      const rect = computePanelRect({x: 420, y: 200}, sizes.medium, vp);
+      expect(rect).toEqual({left: 76, top: 200 + 56 + 12, height: 428});
+    });
+
+    it("never overlaps the default bubble at any common viewport size", () => {
+      const config = readBubblePlacementConfig(undefined);
+      for (const path of ["/catalog", "/search"]) {
+        for (const width of [360, 500, 768, 1280]) {
+          for (const height of [600, 720, 800, 1080]) {
+            for (const dimensions of Object.values(sizes)) {
+              const vp = {width, height};
+              const b = placementToCoords(resolvePlacement(config, path), vp);
+              const r = computePanelRect(b, dimensions, vp);
+              const overlaps =
+                b.x < r.left + dimensions.width &&
+                r.left < b.x + 56 &&
+                b.y < r.top + r.height &&
+                r.top < b.y + 56;
+              expect({path, width, height, overlaps}).toEqual({
+                path,
+                width,
+                height,
+                overlaps: false,
+              });
+              expect(r.top + r.height).toBeLessThanOrEqual(height - 24);
+            }
+          }
+        }
+      }
     });
   });
 });

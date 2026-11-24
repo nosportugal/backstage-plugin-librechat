@@ -69,10 +69,12 @@ export interface Config {
 
       /**
        * Per-route placement overrides. `path` is a path prefix matched on
-       * segment boundaries; the longest match wins. Unset fields fall back to
-       * `bubble.position`. When omitted, a built-in override raises the bubble
-       * on `/search` (offsetY: 120) so it doesn't cover the results pager;
-       * setting this list replaces that built-in (use `[]` to disable it).
+       * segment boundaries; the longest match wins. Paths are relative to the
+       * app root: any sub-path in `app.baseUrl` is stripped before matching.
+       * Unset fields fall back to `bubble.position`. When omitted, a built-in
+       * override raises the bubble on `/search` (offsetY: 120) so it doesn't
+       * cover the results pager; setting this list replaces that built-in (use
+       * `[]` to disable it).
        * @visibility frontend
        */
       routes?: Array<{

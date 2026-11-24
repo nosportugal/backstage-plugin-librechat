@@ -92,8 +92,10 @@ test.describe("LibreChat chat bubble", () => {
   for (const viewport of [
     {width: 1280, height: 720},
     {width: 1280, height: 800},
+    // Too narrow to fit the panel beside the bubble.
+    {width: 500, height: 720},
   ]) {
-    test(`keeps the open chat panel inside a ${viewport.height}px-high viewport on the search page`, async ({
+    test(`keeps the open chat panel inside a ${viewport.width}x${viewport.height} viewport on the search page`, async ({
       page,
     }) => {
       await page.setViewportSize(viewport);
@@ -105,15 +107,21 @@ test.describe("LibreChat chat bubble", () => {
       await expect(input).toBeVisible();
       await expect(input).toBeInViewport({ratio: 1});
 
-      // The bubble must not sit on top of the message input either.
-      const b = (await bubble.boundingBox())!;
-      const i = (await input.boundingBox())!;
-      const overlaps =
-        b.x < i.x + i.width &&
-        i.x < b.x + b.width &&
-        b.y < i.y + i.height &&
-        i.y < b.y + b.height;
-      expect(overlaps).toBe(false);
+      // The bubble must not sit on top of any part of the panel either.
+      // Polled because the panel slides into place when it opens.
+      const panel = page.getByTestId("librechat-panel");
+      await expect
+        .poll(async () => {
+          const b = (await bubble.boundingBox())!;
+          const p = (await panel.boundingBox())!;
+          return (
+            b.x < p.x + p.width &&
+            p.x < b.x + b.width &&
+            b.y < p.y + p.height &&
+            p.y < b.y + b.height
+          );
+        })
+        .toBe(false);
     });
   }
 });

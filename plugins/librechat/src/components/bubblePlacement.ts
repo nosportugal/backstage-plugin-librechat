@@ -28,6 +28,8 @@ export const EDGE_MARGIN = 24;
 export const PANEL_GAP = 12;
 /** Vertical space (px) the panel always leaves free: it is never taller than the viewport minus this. */
 export const PANEL_VIEWPORT_RESERVE = 120;
+/** Shortest (px) the panel is shrunk to in order to avoid covering the bubble. */
+export const MIN_PANEL_HEIGHT = 240;
 
 const ANCHORS: readonly BubbleAnchor[] = [
   "bottom-right",
@@ -122,6 +124,27 @@ export function matchesPath(pathname: string, prefix: string): boolean {
   return current === p || current.startsWith(`${p}/`);
 }
 
+/**
+ * Strip the app's base path (the pathname of `app.baseUrl`) from a browser
+ * pathname, so route prefixes are matched relative to the app root: with the
+ * app served at `https://host/backstage`, `/backstage/search` becomes `/search`.
+ */
+export function stripBasePath(
+  pathname: string,
+  appBaseUrl: string | undefined,
+): string {
+  let basePath = "/";
+  try {
+    basePath = normalizePath(new URL(appBaseUrl ?? "").pathname);
+  } catch {
+    // Missing or relative app.baseUrl: the app is served from the root.
+  }
+  if (basePath === "/" || !matchesPath(pathname, basePath)) {
+    return pathname;
+  }
+  return pathname.slice(basePath.length) || "/";
+}
+
 /** Pick the placement for the current path; the longest matching prefix wins. */
 export function resolvePlacement(
   config: BubblePlacementConfig,
@@ -169,7 +192,8 @@ function clamp(value: number, min: number, max: number): number {
  *
  * The panel sits above the bubble when it fits there, otherwise below. When it
  * fits on neither side (bubble mid-height on a short viewport) it is clamped
- * vertically and moved beside the bubble so the two don't overlap.
+ * vertically and moved beside the bubble so the two don't overlap. On viewports
+ * too narrow for that, it is shortened to the room above or below the bubble.
  */
 export function computePanelRect(
   bubble: {x: number; y: number},
@@ -208,6 +232,16 @@ export function computePanelRect(
   const rightOfBubble = bubble.x + FAB_SIZE + PANEL_GAP;
   if (rightOfBubble <= maxLeft) {
     return {left: rightOfBubble, top, height};
+  }
+
+  // Too narrow to sit beside the bubble: shorten the panel to the larger of
+  // the spaces above and below it, unless that would make it unusably short.
+  const spaceAbove = bubble.y - PANEL_GAP - EDGE_MARGIN;
+  const spaceBelow = viewport.height - EDGE_MARGIN - belowTop;
+  if (Math.max(spaceAbove, spaceBelow) >= MIN_PANEL_HEIGHT) {
+    return spaceAbove >= spaceBelow
+      ? {left: alignedLeft, top: EDGE_MARGIN, height: spaceAbove}
+      : {left: alignedLeft, top: belowTop, height: spaceBelow};
   }
   return {left: alignedLeft, top, height};
 }
