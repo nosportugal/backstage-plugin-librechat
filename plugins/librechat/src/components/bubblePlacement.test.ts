@@ -2,6 +2,7 @@ import {describe, expect, it} from "@jest/globals";
 import {ConfigReader as BackstageConfigReader} from "@backstage/config";
 import {
   DEFAULT_PLACEMENT,
+  computePanelRect,
   matchesPath,
   placementToCoords,
   readBubblePlacementConfig,
@@ -81,5 +82,59 @@ describe("bubblePlacement", () => {
     expect(matchesPath("/search", "/search/")).toBe(true);
     expect(matchesPath("/search-x", "/search")).toBe(false);
     expect(matchesPath("/anything", "/")).toBe(true);
+  });
+
+  describe("computePanelRect", () => {
+    const sizes = {
+      small: {width: 340, height: 480},
+      medium: {width: 400, height: 560},
+      large: {width: 460, height: 680},
+    };
+
+    it("places the panel above the bubble when it fits", () => {
+      const bubble = placementToCoords(DEFAULT_PLACEMENT, viewport);
+      expect(computePanelRect(bubble, sizes.medium, viewport)).toEqual({
+        left: bubble.x + 56 - 400,
+        top: bubble.y - 12 - 560,
+        height: 560,
+      });
+    });
+
+    it("places the panel below a bubble near the top", () => {
+      const rect = computePanelRect({x: 1200, y: 24}, sizes.medium, viewport);
+      expect(rect.top).toBe(24 + 56 + 12);
+    });
+
+    it("keeps the panel on screen for every size and default placement", () => {
+      const config = readBubblePlacementConfig(undefined);
+      for (const path of ["/catalog", "/search"]) {
+        for (const height of [600, 720, 800, 1080]) {
+          for (const dimensions of Object.values(sizes)) {
+            const vp = {width: 1280, height};
+            const bubble = placementToCoords(resolvePlacement(config, path), vp);
+            const rect = computePanelRect(bubble, dimensions, vp);
+            expect(rect.top).toBeGreaterThanOrEqual(24);
+            expect(rect.top + rect.height).toBeLessThanOrEqual(height - 24);
+            expect(rect.left).toBeGreaterThanOrEqual(24);
+            expect(rect.left + dimensions.width).toBeLessThanOrEqual(1280 - 24);
+          }
+        }
+      }
+    });
+
+    it("moves the panel beside the bubble when it fits neither above nor below", () => {
+      // Medium panel on /search at 720px: the raised bubble leaves no room
+      // above or below, which used to push the panel off the bottom edge.
+      const vp = {width: 1280, height: 720};
+      const bubble = {x: 1280 - 24 - 56, y: 720 - 120 - 56};
+      const rect = computePanelRect(bubble, sizes.medium, vp);
+      expect(rect).toEqual({left: bubble.x - 12 - 400, top: 24, height: 560});
+    });
+
+    it("falls back to the right of the bubble near the left edge", () => {
+      const vp = {width: 1280, height: 720};
+      const rect = computePanelRect({x: 24, y: 544}, sizes.medium, vp);
+      expect(rect.left).toBe(24 + 56 + 12);
+    });
   });
 });

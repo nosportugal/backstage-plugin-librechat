@@ -24,6 +24,10 @@ export interface BubblePlacementConfig {
 
 export const FAB_SIZE = 56;
 export const EDGE_MARGIN = 24;
+/** Gap (px) between the bubble and the open chat panel. */
+export const PANEL_GAP = 12;
+/** Vertical space (px) the panel always leaves free: it is never taller than the viewport minus this. */
+export const PANEL_VIEWPORT_RESERVE = 120;
 
 const ANCHORS: readonly BubbleAnchor[] = [
   "bottom-right",
@@ -153,4 +157,57 @@ export function placementToCoords(
     x: Math.min(Math.max(x, 0), Math.max(viewport.width - FAB_SIZE, 0)),
     y: Math.min(Math.max(y, 0), Math.max(viewport.height - FAB_SIZE, 0)),
   };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(max, min));
+}
+
+/**
+ * Position and height of the chat panel for a bubble at `bubble`, kept fully
+ * inside the viewport.
+ *
+ * The panel sits above the bubble when it fits there, otherwise below. When it
+ * fits on neither side (bubble mid-height on a short viewport) it is clamped
+ * vertically and moved beside the bubble so the two don't overlap.
+ */
+export function computePanelRect(
+  bubble: {x: number; y: number},
+  dimensions: {width: number; height: number},
+  viewport: {width: number; height: number},
+): {left: number; top: number; height: number} {
+  const height = Math.max(
+    Math.min(dimensions.height, viewport.height - PANEL_VIEWPORT_RESERVE),
+    0,
+  );
+  const maxLeft = viewport.width - dimensions.width - EDGE_MARGIN;
+  const maxTop = viewport.height - height - EDGE_MARGIN;
+  // Right-align the panel with the bubble, clamped within the viewport.
+  const alignedLeft = clamp(
+    bubble.x + FAB_SIZE - dimensions.width,
+    EDGE_MARGIN,
+    maxLeft,
+  );
+
+  const aboveTop = bubble.y - PANEL_GAP - height;
+  if (aboveTop >= EDGE_MARGIN) {
+    return {left: alignedLeft, top: aboveTop, height};
+  }
+  const belowTop = bubble.y + FAB_SIZE + PANEL_GAP;
+  if (belowTop <= maxTop) {
+    return {left: alignedLeft, top: belowTop, height};
+  }
+
+  // No room above or below: keep the panel on screen and put it beside the
+  // bubble when there is room, so the bubble doesn't cover it.
+  const top = clamp(aboveTop, EDGE_MARGIN, maxTop);
+  const leftOfBubble = bubble.x - PANEL_GAP - dimensions.width;
+  if (leftOfBubble >= EDGE_MARGIN) {
+    return {left: leftOfBubble, top, height};
+  }
+  const rightOfBubble = bubble.x + FAB_SIZE + PANEL_GAP;
+  if (rightOfBubble <= maxLeft) {
+    return {left: rightOfBubble, top, height};
+  }
+  return {left: alignedLeft, top, height};
 }

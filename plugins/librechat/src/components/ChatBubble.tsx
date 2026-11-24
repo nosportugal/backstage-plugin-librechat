@@ -19,12 +19,13 @@ import {
 import {
   EDGE_MARGIN,
   FAB_SIZE,
+  PANEL_VIEWPORT_RESERVE,
+  computePanelRect,
   placementToCoords,
   readBubblePlacementConfig,
   resolvePlacement,
 } from "./bubblePlacement";
 
-const PANEL_GAP = 12;
 /** Pointer travel (px) before a press is treated as a drag rather than a click. */
 const DRAG_THRESHOLD = 4;
 
@@ -75,7 +76,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   panel: {
     position: "fixed",
-    maxHeight: "calc(100vh - 120px)",
+    maxHeight: `calc(100vh - ${PANEL_VIEWPORT_RESERVE}px)`,
     borderRadius: 12,
     overflow: "hidden",
     display: "flex",
@@ -140,26 +141,6 @@ function clampCoords({x, y}: Coords): Coords {
     x: Math.min(Math.max(x, EDGE_MARGIN), Math.max(maxX, EDGE_MARGIN)),
     y: Math.min(Math.max(y, EDGE_MARGIN), Math.max(maxY, EDGE_MARGIN)),
   };
-}
-
-/** Position the panel near the bubble, flipping/clamping to stay on screen. */
-function computePanelStyle(
-  bubble: Coords,
-  dimensions: {width: number; height: number},
-): {left: number; top: number} {
-  // Right-align the panel with the fab, then clamp within the viewport.
-  const rawLeft = bubble.x + FAB_SIZE - dimensions.width;
-  const left = Math.min(
-    Math.max(rawLeft, EDGE_MARGIN),
-    Math.max(window.innerWidth - dimensions.width - EDGE_MARGIN, EDGE_MARGIN),
-  );
-
-  // Prefer placing the panel above the fab; fall back to below if no room.
-  const aboveTop = bubble.y - PANEL_GAP - dimensions.height;
-  const top =
-    aboveTop >= EDGE_MARGIN ? aboveTop : bubble.y + FAB_SIZE + PANEL_GAP;
-
-  return {left, top};
 }
 
 export function ChatBubble() {
@@ -286,7 +267,10 @@ export function ChatBubble() {
 
   const dimensions = CHAT_SIZE_DIMENSIONS[settings.chatSize];
   const bubbleCoords = position ?? defaultCoords();
-  const panelStyle = computePanelStyle(bubbleCoords, dimensions);
+  const panelRect = computePanelRect(bubbleCoords, dimensions, {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
 
   let bubbleIcon = <ChatIcon />;
   if (iconSrc) {
@@ -306,10 +290,10 @@ export function ChatBubble() {
             className={classes.panel}
             elevation={16}
             style={{
-              left: panelStyle.left,
-              top: panelStyle.top,
+              left: panelRect.left,
+              top: panelRect.top,
               width: dimensions.width,
-              height: dimensions.height,
+              height: panelRect.height,
             }}
           >
             <ChatPanel />

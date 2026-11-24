@@ -88,4 +88,32 @@ test.describe("LibreChat chat bubble", () => {
     );
     expect((await bubble.boundingBox())!.y).toBeCloseTo(dragged.y, 0);
   });
+
+  for (const viewport of [
+    {width: 1280, height: 720},
+    {width: 1280, height: 800},
+  ]) {
+    test(`keeps the open chat panel inside a ${viewport.height}px-high viewport on the search page`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/search");
+      await page.getByRole("button", {name: "Open chat"}).click();
+
+      const bubble = page.getByRole("button", {name: "Close chat"});
+      const input = page.getByPlaceholder("Type a message...");
+      await expect(input).toBeVisible();
+      await expect(input).toBeInViewport({ratio: 1});
+
+      // The bubble must not sit on top of the message input either.
+      const b = (await bubble.boundingBox())!;
+      const i = (await input.boundingBox())!;
+      const overlaps =
+        b.x < i.x + i.width &&
+        i.x < b.x + b.width &&
+        b.y < i.y + i.height &&
+        i.y < b.y + b.height;
+      expect(overlaps).toBe(false);
+    });
+  }
 });
